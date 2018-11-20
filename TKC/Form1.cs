@@ -16,10 +16,10 @@ namespace TKC
         {
             InitializeComponent();
         }
-        JSONReader r1 = new JSONReader();
+        JSONReaderSingleton r1 = JSONReaderSingleton.getInstance();
         private void button1_Click(object sender, EventArgs e)
         {
-            label1.Text = r1.ReadJsonFile(@"C:\Users\Michal Budík\Saved Games\Frontier Developments\Elite Dangerous\JournalEdit.txt");
+            r1.ReadJsonFile(@"C:\Users\Michal Budík\Saved Games\Frontier Developments\Elite Dangerous\JournalEdit.txt");
         }
     }
 }
