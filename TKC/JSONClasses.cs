@@ -53,7 +53,7 @@ namespace TKC
     public class JSONReaderSingleton
     {
         /// <summary>
-        /// Thargoid types kill counts
+        /// Thargoid types kill counts (unknown for future use)
         /// </summary>
         int scout { get; set; }
         int cyclops { get; set; }
@@ -62,9 +62,8 @@ namespace TKC
         int hydra { get; set; }
         int unknown { get; set; }
 
-        int index = 0;
         //Dictionary<int, EDEvent> eventsDictionary = new Dictionary<int, EDEvent>();
-        Dictionary<int, EDEvent> killsDictionary = new Dictionary<int, EDEvent>();
+        //Dictionary<int, EDEvent> killsDictionary = new Dictionary<int, EDEvent>();
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
@@ -83,6 +82,14 @@ namespace TKC
             return JSONReaderInstance;
         }
 
+        /// <summary>
+        /// Prints thargoid kills to text
+        /// </summary>
+        /// <returns>String of thargoid kills</returns>
+        public string printKills()
+        {
+            return " Scouts: " + scout + " Cyclops: " + cyclops + " Basillisk: " + basillisk + " Medusa: " + medusa + " hydra: " + hydra + " unknown " + unknown;
+        }
         /// <summary>
         /// Detects thargoid kill from EDEvent class with its variablie @event
         /// </summary>
@@ -109,13 +116,15 @@ namespace TKC
                         hydra++;
                         break;
                     default:
-                        MessageBox.Show("Error: Thargoid kill cant resolve thargoid type. Logging to unknown type for later resolution.");
-                        //TODO dodělat zapsání chyby do logu
+
+                        //TODO //error logging
                         break;
                 }
             }
         }
+
         bool firstRead = false;
+        int line = 1;
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
@@ -135,30 +144,32 @@ namespace TKC
                     System.IO.StreamReader file = new System.IO.StreamReader(path); //Streamreader which reads file line by line
                     while ((JSONStringLine = file.ReadLine()) != null)
                     {
-                        //JSON convertor which converts JSON to class variables
-                        e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        if (e1.@event.Equals("FactionKillBond"))
+                        try
                         {
-                            t1 = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                            killsDictionary[index] = t1;
-                            index++;
+                            //JSON convertor which converts JSON to class variables
+                            e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                            line++;
+                            if (e1.@event.Equals("FactionKillBond"))
+                            {
+                                t1 = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                                DetectThargoidKill(t1);
+                                
+                            }
+                        }catch(JsonReaderException)
+                        {
+                            //error logging
                         }
 
-
                     }
-
+                    
                     firstRead = true;
+                    
                 }
                 
                 else
                 {
-                    string vysledek = "";
-                    for(int i = 0; i < index; i++)
-                    {
-                        vysledek += killsDictionary[i] + "\r\n";
-                        
-                    }
-                    MessageBox.Show(vysledek);
+                    
+                    
                 }
                 
 
@@ -167,6 +178,12 @@ namespace TKC
             {
 
                 MessageBox.Show("Error: File not found");
+                //error logging
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Error: Unknown error");
+                //error logging
             }
         }
 
