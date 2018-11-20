@@ -1,14 +1,13 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
 namespace TKC
 {
 
-  
+
     /// <summary>
     /// Class for saving Timestamp and events from JSON file
     /// </summary>
@@ -62,8 +61,6 @@ namespace TKC
         int hydra { get; set; }
         int unknown { get; set; }
 
-        //Dictionary<int, EDEvent> eventsDictionary = new Dictionary<int, EDEvent>();
-        //Dictionary<int, EDEvent> killsDictionary = new Dictionary<int, EDEvent>();
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
@@ -90,37 +87,46 @@ namespace TKC
         {
             return " Scouts: " + scout + " Cyclops: " + cyclops + " Basillisk: " + basillisk + " Medusa: " + medusa + " hydra: " + hydra + " unknown " + unknown;
         }
+        
         /// <summary>
         /// Detects thargoid kill from EDEvent class with its variablie @event
         /// </summary>
         /// <param name="e1"> converted JSON text </param>
-        private void DetectThargoidKill(ThargoidKillEvent kill)
+        private void DetectThargoidKill(EDEvent e1, string JSONStringLine)
         {
-            if (kill.awardingFaction_Localised.Equals("Pilots Federation") && kill.victimFaction_Localised.Equals("Thargoids"))
+            ThargoidKillEvent kill;
+            if (e1.@event.Equals("FactionKillBond"))
             {
-                int caseSwitch = kill.reward;
-                switch (caseSwitch) {
-                    case 10000:
-                        scout++;
-                        break;
-                    case 2000000:
-                        cyclops++;
-                        break;
-                    case 6000000:
-                        basillisk++;
-                        break;
-                    case 10000000:
-                        medusa++;
-                        break;
-                    case 15000000:
-                        hydra++;
-                        break;
-                    default:
+                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
-                        //TODO //error logging
-                        break;
+                if (kill.awardingFaction_Localised.Equals("Pilots Federation") && kill.victimFaction_Localised.Equals("Thargoids"))
+                {
+                    int caseSwitch = kill.reward;
+                    switch (caseSwitch)
+                    {
+                        case 10000:
+                            scout++;
+                            break;
+                        case 2000000:
+                            cyclops++;
+                            break;
+                        case 6000000:
+                            basillisk++;
+                            break;
+                        case 10000000:
+                            medusa++;
+                            break;
+                        case 15000000:
+                            hydra++;
+                            break;
+                        default:
+
+                            //TODO //error logging
+                            break;
+                    }
                 }
             }
+            
         }
 
         bool firstRead = false;
@@ -137,10 +143,8 @@ namespace TKC
                 String path = filePath; //Path of a file
                 String JSONStringLine = ""; //Variable for JSON text line
 
-                if(firstRead == false)
-                {
+                
                     EDEvent e1;
-                    ThargoidKillEvent t1;
                     System.IO.StreamReader file = new System.IO.StreamReader(path); //Streamreader which reads file line by line
                     while ((JSONStringLine = file.ReadLine()) != null)
                     {
@@ -149,30 +153,14 @@ namespace TKC
                             //JSON convertor which converts JSON to class variables
                             e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                             line++;
-                            if (e1.@event.Equals("FactionKillBond"))
-                            {
-                                t1 = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                                DetectThargoidKill(t1);
-                                
-                            }
-                        }catch(JsonReaderException)
+                            DetectThargoidKill(e1, JSONStringLine);
+                        }
+                        catch(JsonReaderException)
                         {
                             //error logging
                         }
 
                     }
-                    
-                    firstRead = true;
-                    
-                }
-                
-                else
-                {
-                    
-                    
-                }
-                
-
             }
             catch (FileNotFoundException)
             {
