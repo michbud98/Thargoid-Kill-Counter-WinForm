@@ -14,8 +14,15 @@ namespace TKC
         JSONReaderSingleton r1 = JSONReaderSingleton.getInstance();
         private void button1_Click(object sender, EventArgs e)
         {
-            r1.readDirectory(@"C:\Users\Michal Budík\Saved Games\Frontier Developments\Elite Dangerous");
+            r1.readDirectory();
             label1.Text = r1.printKills();
+
+            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                path = Directory.GetParent(path).ToString();
+            }
+            
         }
     }
 }
