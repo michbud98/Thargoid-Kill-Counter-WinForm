@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace TKC
@@ -47,12 +49,17 @@ namespace TKC
     
 
     /// <summary>
-    /// Singleton class that Reads a JSON file and returns string
+    /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
     public class JSONReaderSingleton
     {
         /// <summary>
-        /// Thargoid types kill counts (unknown for future use)
+        /// <param name="scout"´> - variable for number of scout kills</param>
+        /// <param name="cyclops"´> - variable for number of cyclops kills</param>
+        /// <param name="basillisk"´> - variable for number of basillisk kills</param>
+        /// <param name="medusa"´> - variable for number of medusa kills</param>
+        /// <param name="hydra"´> - variable for number of hydra kills</param>
+        /// <param name="unknown"´> - variable which stores kills of unknown thargoid types</param>
         /// </summary>
         int scout { get; set; }
         int cyclops { get; set; }
@@ -60,6 +67,20 @@ namespace TKC
         int medusa { get; set; }
         int hydra { get; set; }
         int unknown { get; set; }
+
+        /// <summary>
+        /// Method which zerous all thargoid kills
+        /// </summary>
+        private void zeroThargoidKills()
+        {
+            scout = 0;
+            cyclops = 0;
+            basillisk = 0;
+            medusa = 0;
+            hydra = 0;
+            unknown = 0;
+        }
+        
 
 
         //Storage variable for singleton
@@ -85,7 +106,8 @@ namespace TKC
         /// <returns>String of thargoid kills</returns>
         public string printKills()
         {
-            return " Scouts: " + scout + " Cyclops: " + cyclops + " Basillisk: " + basillisk + " Medusa: " + medusa + " hydra: " + hydra + " unknown " + unknown;
+            return " Scouts: " + scout + "\r\n Cyclops: " + cyclops + "\r\n Basillisk: " + basillisk + "\r\n Medusa: " + 
+                medusa + "\r\n hydra: " + hydra + "\r\n unknown " + unknown;
         }
         
         /// <summary>
@@ -93,44 +115,60 @@ namespace TKC
         /// </summary>
         /// <param name="e1"> converted JSON text </param>
         private void DetectThargoidKill(EDEvent e1, string JSONStringLine)
-        {
-            ThargoidKillEvent kill;
-            if (e1.@event.Equals("FactionKillBond"))
+        {            
+            try
             {
-                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
-                if (kill.awardingFaction_Localised.Equals("Pilots Federation") && kill.victimFaction_Localised.Equals("Thargoids"))
+                ThargoidKillEvent kill;
+                if (e1.@event.Equals("FactionKillBond"))
                 {
-                    int caseSwitch = kill.reward;
-                    switch (caseSwitch)
-                    {
-                        case 10000:
-                            scout++;
-                            break;
-                        case 2000000:
-                            cyclops++;
-                            break;
-                        case 6000000:
-                            basillisk++;
-                            break;
-                        case 10000000:
-                            medusa++;
-                            break;
-                        case 15000000:
-                            hydra++;
-                            break;
-                        default:
 
-                            //TODO //error logging
-                            break;
+                    kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
+                        new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+                    if (kill.awardingFaction_Localised != null && kill.victimFaction_Localised != null &&
+                        kill.awardingFaction_Localised.Equals("Pilots Federation") && kill.victimFaction_Localised.Equals("Thargoids"))
+
+                    {
+                        int caseSwitch = kill.reward;
+                        switch (caseSwitch)
+                        {
+                            case 10000:
+                                scout++;
+                                break;
+                            case 2000000:
+                                cyclops++;
+                                break;
+                            case 6000000:
+                                basillisk++;
+                                break;
+                            case 10000000:
+                                medusa++;
+                                break;
+                            case 15000000:
+                                hydra++;
+                                break;
+                            default:
+                                unknown++;
+                                ErrorLogging.LogUnknownThargoidType(JSONStringLine);
+                                break;
+                        }
                     }
                 }
+            }catch(Exception e)
+            {
+                MessageBox.Show("Error: Unknown in method DetectThargoidKill");
+                ErrorLogging.LogError(e, JSONStringLine);
+                throw;
             }
             
         }
 
-        bool firstRead = false;
+        /// <summary>
+        /// <param name="line"> - debug integer for current line number</param>>
+        /// </summary>
         int line = 1;
+        String JSONStringLine;
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
@@ -139,43 +177,104 @@ namespace TKC
         {
             try
             {
-
                 String path = filePath; //Path of a file
-                String JSONStringLine = ""; //Variable for JSON text line
-
-                
-                    EDEvent e1;
-                    System.IO.StreamReader file = new System.IO.StreamReader(path); //Streamreader which reads file line by line
-                    while ((JSONStringLine = file.ReadLine()) != null)
-                    {
-                        try
-                        {
-                            //JSON convertor which converts JSON to class variables
-                            e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                            line++;
-                            DetectThargoidKill(e1, JSONStringLine);
-                        }
-                        catch(JsonReaderException)
-                        {
-                            //error logging
-                        }
-
-                    }
+                JSONStringLine = ""; //Variable for JSON text line
+                EDEvent e1;
+                System.IO.StreamReader file = new System.IO.StreamReader(path); //Streamreader which reads file line by line
+                while ((JSONStringLine = file.ReadLine()) != null)
+                {
+                    //JSON convertor which converts JSON to class variables
+                    e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                    line++;
+                    DetectThargoidKill(e1, JSONStringLine);
+                }
             }
-            catch (FileNotFoundException)
+            catch (JsonReaderException e)
+            {
+                ErrorLogging.LogError(e, JSONStringLine);
+            }
+            catch (FileNotFoundException e)
             {
 
-                MessageBox.Show("Error: File not found");
-                //error logging
+                MessageBox.Show("Error: File " + filePath + " not found");
+                ErrorLogging.LogError(e, filePath);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                MessageBox.Show("Error: Unknown error");
-                //error logging
+                MessageBox.Show("Error: Unknown error in ReadJsonFile");
+                ErrorLogging.LogError(e,filePath);
+                throw;
             }
         }
+        /// <summary>
+        /// Reads all log files in selected directory
+        /// </summary>
+        public void readDirectory()
+        {
+            try
+            {
+                zeroThargoidKills();
+                List<FileInfo> filesList = JSONReaderInstance.GetJournals();
+                string path = "";
+                for (int i = 0; i < filesList.Count; i++)
+                {
+                    path = filesList[i].FullName;
+                    //Console.WriteLine("Reading: " + path);
+                    JSONReaderInstance.ReadJsonFile(path);
+                }
+            }catch(DirectoryNotFoundException )
+            {
+                MessageBox.Show("Error: Journals directory not found");
+            }
+            
+        }
 
+        String directoryPath;
+        /// <summary>
+        /// Method which find all Elite dangerous Journals in selected directory
+        /// </summary>
+        /// <returns>List of Journals </returns>
+        private List<FileInfo> GetJournals()
+        { 
+           try
+           {
+                //finds path to Users folder ("C:\Users\<user>)"
+                directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+                if (Environment.OSVersion.Version.Major >= 6)
+                {
+                    directoryPath = Directory.GetParent(directoryPath).ToString();
+                }
+                Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
+                DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
+            FileInfo[] files = directory.GetFiles("*.log");
+            List<FileInfo> sortedFilesList = new List<FileInfo>();
+            int index = 0;
 
+            while(index < files.Length)
+            {
+                if(regex.IsMatch(files[index].Name))
+                {
+                    sortedFilesList.Add(files[index]);
+                }
+                index++;
+            }
 
+                
+            return sortedFilesList;
+            }
+            catch(DirectoryNotFoundException e)
+            {
+                ErrorLogging.LogError(e, directoryPath);
+                throw;
+                
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show("Error:  " + e.Message);
+                ErrorLogging.LogError(e);
+                throw;
+            }
+
+        }
     }
 }
