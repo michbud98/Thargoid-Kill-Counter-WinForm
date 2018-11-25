@@ -49,7 +49,7 @@ namespace TKC
     
 
     /// <summary>
-    /// Singleton class that Reads a JSON file and returns string
+    /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
     public class JSONReaderSingleton
     {
@@ -68,6 +68,18 @@ namespace TKC
         int hydra { get; set; }
         int unknown { get; set; }
 
+        /// <summary>
+        /// Method which zerous all thargoid kills
+        /// </summary>
+        private void zeroThargoidKills()
+        {
+            scout = 0;
+            cyclops = 0;
+            basillisk = 0;
+            medusa = 0;
+            hydra = 0;
+            unknown = 0;
+        }
         
 
 
@@ -106,6 +118,7 @@ namespace TKC
         {            
             try
             {
+
                 ThargoidKillEvent kill;
                 if (e1.@event.Equals("FactionKillBond"))
                 {
@@ -136,15 +149,17 @@ namespace TKC
                                 hydra++;
                                 break;
                             default:
-
-                                //TODO //error logging
+                                unknown++;
+                                ErrorLogging.LogUnknownThargoidType(JSONStringLine);
                                 break;
                         }
                     }
                 }
-            }catch(Exception)
+            }catch(Exception e)
             {
                 MessageBox.Show("Error: Unknown in method DetectThargoidKill");
+                ErrorLogging.LogError(e, JSONStringLine);
+                throw;
             }
             
         }
@@ -153,17 +168,17 @@ namespace TKC
         /// <param name="line"> - debug integer for current line number</param>>
         /// </summary>
         int line = 1;
-
+        String JSONStringLine;
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
         /// <param name="filePath"> - a path to a file</param>
-        private void ReadJsonFile(String filePath)
+        public void ReadJsonFile(String filePath)
         {
             try
             {
                 String path = filePath; //Path of a file
-                String JSONStringLine = ""; //Variable for JSON text line
+                JSONStringLine = ""; //Variable for JSON text line
                 EDEvent e1;
                 System.IO.StreamReader file = new System.IO.StreamReader(path); //Streamreader which reads file line by line
                 while ((JSONStringLine = file.ReadLine()) != null)
@@ -174,20 +189,21 @@ namespace TKC
                     DetectThargoidKill(e1, JSONStringLine);
                 }
             }
-            catch (JsonReaderException)
+            catch (JsonReaderException e)
             {
-                //error logging
+                ErrorLogging.LogError(e, JSONStringLine);
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
 
                 MessageBox.Show("Error: File " + filePath + " not found");
-                //error logging
+                ErrorLogging.LogError(e, filePath);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 MessageBox.Show("Error: Unknown error in ReadJsonFile");
-                //error logging
+                ErrorLogging.LogError(e,filePath);
+                throw;
             }
         }
         /// <summary>
@@ -195,14 +211,22 @@ namespace TKC
         /// </summary>
         public void readDirectory()
         {
-            List<FileInfo> filesList = JSONReaderInstance.GetJournals();
-            string path = "";
-            for (int i = 0; i < filesList.Count; i++)
+            try
             {
-                path = filesList[i].FullName;
-                Console.WriteLine("Reading: " + path);
-                JSONReaderInstance.ReadJsonFile(path);
+                zeroThargoidKills();
+                List<FileInfo> filesList = JSONReaderInstance.GetJournals();
+                string path = "";
+                for (int i = 0; i < filesList.Count; i++)
+                {
+                    path = filesList[i].FullName;
+                    //Console.WriteLine("Reading: " + path);
+                    JSONReaderInstance.ReadJsonFile(path);
+                }
+            }catch(DirectoryNotFoundException )
+            {
+                MessageBox.Show("Error: Journals directory not found");
             }
+            
         }
 
         String directoryPath;
@@ -238,16 +262,17 @@ namespace TKC
                 
             return sortedFilesList;
             }
-            catch(DirectoryNotFoundException)
+            catch(DirectoryNotFoundException e)
             {
-                MessageBox.Show("Error: Directory " + directoryPath + " not found.");
-                throw new Exception();
+                ErrorLogging.LogError(e, directoryPath);
+                throw;
                 
             }
-            catch(Exception)
+            catch(Exception e)
             {
-                MessageBox.Show("Error: Unknown in method getJournals");
-                throw new Exception();
+                MessageBox.Show("Error:  " + e.Message);
+                ErrorLogging.LogError(e);
+                throw;
             }
 
         }

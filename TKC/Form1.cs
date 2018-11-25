@@ -16,13 +16,11 @@ namespace TKC
         {
             r1.readDirectory();
             label1.Text = r1.printKills();
+        }
 
-            string path = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
-                path = Directory.GetParent(path).ToString();
-            }
-            
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            label1.Text = r1.printKills();
         }
     }
 }
