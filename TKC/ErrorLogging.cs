@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace TKC
 {
     /// <summary>
-    /// Class which handles saving data about errors in logs
+    /// Class which handles saving data about errors in .txt files
     /// </summary>
     class ErrorLogging
     {
@@ -39,7 +39,7 @@ namespace TKC
         }
 
         /// <summary>
-        /// Method which saves error in log
+        /// Overloaded method which saves error in log with additional input from method causing Error
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="e"> Exception</param>
@@ -67,9 +67,9 @@ namespace TKC
             writer.Close();
         }
         /// <summary>
-        /// Method which saves unknown thargoid type
+        /// Method which saves unknown thargoid types found in logs into txt file
         /// </summary>
-        /// <param name="JSONString"></param>
+        /// <param name="JSONString">JSON string input</param>
         public static void LogUnknownThargoidType(String JSONString)
         {
             string date = DateTime.Today.ToString("dd/MM/yyyy");

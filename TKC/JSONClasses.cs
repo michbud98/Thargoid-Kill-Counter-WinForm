@@ -11,7 +11,7 @@ namespace TKC
 
 
     /// <summary>
-    /// Class for saving Timestamp and events from JSON file
+    /// Class for saving Timestamp and name of events from JSON file
     /// </summary>
     public class EDEvent
     {
@@ -69,9 +69,9 @@ namespace TKC
         int unknown { get; set; }
 
         /// <summary>
-        /// Method which zerous all thargoid kills
+        /// Method which resets all thargoid kills
         /// </summary>
-        private void zeroThargoidKills()
+        private void resetThargoidKills()
         {
             scout = 0;
             cyclops = 0;
@@ -109,11 +109,12 @@ namespace TKC
             return " Scouts: " + scout + "\r\n Cyclops: " + cyclops + "\r\n Basillisk: " + basillisk + "\r\n Medusa: " + 
                 medusa + "\r\n hydra: " + hydra + "\r\n unknown " + unknown;
         }
-        
+
         /// <summary>
-        /// Detects thargoid kill from EDEvent class with its variablie @event
+        /// Detects thargoid kill from EDEvent class
         /// </summary>
-        /// <param name="e1"> converted JSON text </param>
+        /// <param name="e1"> converted JSON text to class </param>
+        /// <param name="JSONStringLine"> JSON text </param>
         private void DetectThargoidKill(EDEvent e1, string JSONStringLine)
         {            
             try
@@ -164,24 +165,25 @@ namespace TKC
             
         }
 
-        /// <summary>
-        /// <param name="line"> - debug integer for current line number</param>>
-        /// </summary>
-        int line = 1;
-        String JSONStringLine;
+        
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
         /// <param name="filePath"> - a path to a file</param>
-        public void ReadJsonFile(String filePath)
+        public void ReadJsonFile(string filePath)
         {
+            //debug integer for current line of reading
+            int line = 1;
+            //debug string for current JSONStringLine
+            string JSONStringLine = "";
+            StreamReader fileReader = null;
             try
             {
-                String path = filePath; //Path of a file
+                string path = filePath; //Path of a file
                 JSONStringLine = ""; //Variable for JSON text line
                 EDEvent e1;
-                System.IO.StreamReader file = new System.IO.StreamReader(path); //Streamreader which reads file line by line
-                while ((JSONStringLine = file.ReadLine()) != null)
+                fileReader = new System.IO.StreamReader(path); //Streamreader which reads file line by line
+                while ((JSONStringLine = fileReader.ReadLine()) != null)
                 {
                     //JSON convertor which converts JSON to class variables
                     e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
@@ -199,37 +201,63 @@ namespace TKC
                 MessageBox.Show("Error: File " + filePath + " not found");
                 ErrorLogging.LogError(e, filePath);
             }
+            catch (IOException e)
+            {
+                ErrorLogging.LogError(e);
+                throw;
+            }
             catch (Exception e)
             {
                 MessageBox.Show("Error: Unknown error in ReadJsonFile");
                 ErrorLogging.LogError(e,filePath);
                 throw;
             }
+            finally
+            {
+                fileReader.Close();
+            }
         }
+       
         /// <summary>
         /// Reads all log files in selected directory
         /// </summary>
         public void readDirectory()
         {
+            const int numberOfRetries = 20;
+            const int delay = 3000;
             try
             {
-                zeroThargoidKills();
+                resetThargoidKills();
                 List<FileInfo> filesList = JSONReaderInstance.GetJournals();
                 string path = "";
                 for (int i = 0; i < filesList.Count; i++)
                 {
                     path = filesList[i].FullName;
                     //Console.WriteLine("Reading: " + path);
-                    JSONReaderInstance.ReadJsonFile(path);
+                    for(int j = 0; j <= 0; ++i)
+                    {
+                        try
+                        {
+                            JSONReaderInstance.ReadJsonFile(path);
+                            break;
+                        }
+                        catch (IOException) when (i <= numberOfRetries)
+                        {
+                            System.Threading.Thread.Sleep(delay);
+                        }
+                        
+                    }
                 }
-            }catch(DirectoryNotFoundException )
+            }
+            catch (DirectoryNotFoundException e)
             {
+                ErrorLogging.LogError(e);
                 MessageBox.Show("Error: Journals directory not found");
             }
             
         }
-
-        String directoryPath;
+        //debug string for current directory path
+        string directoryPath;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
         /// </summary>
@@ -244,29 +272,32 @@ namespace TKC
                 {
                     directoryPath = Directory.GetParent(directoryPath).ToString();
                 }
+                //regex that matches ED journals names
                 Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
                 DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
-            FileInfo[] files = directory.GetFiles("*.log");
-            List<FileInfo> sortedFilesList = new List<FileInfo>();
-            int index = 0;
+                //field of unsorted files from directory above
+                FileInfo[] unsortedFiles = directory.GetFiles("*.log");
+                //List for sorted ED log files from directory
+                List<FileInfo> sortedFilesList = new List<FileInfo>();
 
-            while(index < files.Length)
-            {
-                if(regex.IsMatch(files[index].Name))
+                //matches filenames with regex and sorts ED log files from others
+                int index = 0;
+                while (index < unsortedFiles.Length)
                 {
-                    sortedFilesList.Add(files[index]);
+                    if(regex.IsMatch(unsortedFiles[index].Name))
+                    {
+                        sortedFilesList.Add(unsortedFiles[index]);
+                    }
+                    index++;
                 }
-                index++;
-            }
-
                 
-            return sortedFilesList;
+                return sortedFilesList;
             }
-            catch(DirectoryNotFoundException e)
+            catch (DirectoryNotFoundException e)
             {
                 ErrorLogging.LogError(e, directoryPath);
                 throw;
-                
+
             }
             catch(Exception e)
             {
