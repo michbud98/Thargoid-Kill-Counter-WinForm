@@ -229,7 +229,7 @@ namespace TKC
             try
             {
                 resetThargoidKills();
-                List<FileInfo> filesList = JSONReaderInstance.GetJournalsDirectory();
+                List<FileInfo> filesList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";
                 for (int i = 0; i < filesList.Count; i++)
                 {
@@ -258,14 +258,14 @@ namespace TKC
             }
             
         }
-        //debug string for current directory path
 
+        //debug string for current directory path
         string directoryPath;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
         /// </summary>
         /// <returns>List of Journals </returns>
-        private List<FileInfo> GetJournalsDirectory()
+        private List<FileInfo> GetJournalsInDirectory()
         {
             try
             {
@@ -318,7 +318,7 @@ namespace TKC
         /// </summary>
         /// <param name="directoryPathInput"> - directory path </param>
         /// <returns>List of Journals</returns>
-        private List<FileInfo> GetJournalsDirectory(string directoryPathInput)
+        private List<FileInfo> GetJournalsInDirectory(string directoryPathInput)
         {
             try
             {
@@ -366,6 +366,10 @@ namespace TKC
 
         }
 
+        /// <summary>
+        /// Shows folder browser to user which selects ED journals directory
+        /// </summary>
+        /// <returns>List of Journals</returns>
         private List<FileInfo> SelectDirectory()
         { 
             //If app cant find default ED log directory. Alerts user to select directory
@@ -373,11 +377,11 @@ namespace TKC
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                return GetJournalsDirectory(folderBrowserDialog1.SelectedPath);
+                return GetJournalsInDirectory(folderBrowserDialog1.SelectedPath);
             }
             else
             {
-                return GetJournalsDirectory("");
+                return GetJournalsInDirectory("");
             }
         }
     }
