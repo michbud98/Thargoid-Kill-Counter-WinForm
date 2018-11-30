@@ -3,6 +3,7 @@ using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -104,10 +105,10 @@ namespace TKC
         /// Prints thargoid kills to text
         /// </summary>
         /// <returns>String of thargoid kills</returns>
-        public string printKills()
+        public string printAllKills()
         {
-            return " Scouts: " + scout + "\r\n Cyclops: " + cyclops + "\r\n Basillisk: " + basillisk + "\r\n Medusa: " + 
-                medusa + "\r\n hydra: " + hydra + "\r\n unknown " + unknown;
+            return "Kills from all logs:" + "\r\n" +"Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " + 
+                medusa + "\r\nHydra: " + hydra + "\r\nUnknown " + unknown;
         }
 
         /// <summary>
@@ -221,20 +222,20 @@ namespace TKC
         /// <summary>
         /// Reads all log files in selected directory
         /// </summary>
-        public void readDirectory()
+        public void ReadDirectory()
         {
             const int numberOfRetries = 20;
             const int delay = 3000;
             try
             {
                 resetThargoidKills();
-                List<FileInfo> filesList = JSONReaderInstance.GetJournals();
+                List<FileInfo> filesList = JSONReaderInstance.GetJournalsDirectory();
                 string path = "";
                 for (int i = 0; i < filesList.Count; i++)
                 {
                     path = filesList[i].FullName;
                     //Console.WriteLine("Reading: " + path);
-                    for(int j = 0; j <= 0; ++i)
+                    for (int j = 0; j <= 0; ++i)
                     {
                         try
                         {
@@ -245,9 +246,10 @@ namespace TKC
                         {
                             System.Threading.Thread.Sleep(delay);
                         }
-                        
                     }
                 }
+                //Initiates garbage collection at the end
+                GC.Collect();
             }
             catch (DirectoryNotFoundException e)
             {
@@ -257,15 +259,16 @@ namespace TKC
             
         }
         //debug string for current directory path
+
         string directoryPath;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
         /// </summary>
         /// <returns>List of Journals </returns>
-        private List<FileInfo> GetJournals()
-        { 
-           try
-           {
+        private List<FileInfo> GetJournalsDirectory()
+        {
+            try
+            {
                 //finds path to Users folder ("C:\Users\<user>)"
                 directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
                 if (Environment.OSVersion.Version.Major >= 6)
@@ -276,6 +279,59 @@ namespace TKC
                 Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
                 DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
                 //field of unsorted files from directory above
+                FileInfo[] unsortedLogs = directory.GetFiles("*.log");
+                //List for sorted ED log files from directory
+                List<FileInfo> sortedLogsList = new List<FileInfo>();
+
+                //matches filenames with regex and sorts ED log files from others
+                int index = 0;
+                while (index < unsortedLogs.Length)
+                {
+                    if (regex.IsMatch(unsortedLogs[index].Name))
+                    {
+                        sortedLogsList.Add(unsortedLogs[index]);
+
+                    }
+                    index++;
+                }
+                //Orders list by Last time it was written into (descending)
+                sortedLogsList = sortedLogsList.OrderBy(x => x.LastWriteTime).ToList();
+                return sortedLogsList;
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                ErrorLogging.LogError(e, directoryPath);
+                return SelectDirectory();
+
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Error:  " + e.Message);
+                ErrorLogging.LogError(e);
+                throw;
+            }
+
+        }
+       
+        /// <summary>
+        /// Overloaded method GetJournals which gets all Journals from input
+        /// </summary>
+        /// <param name="directoryPathInput"> - directory path </param>
+        /// <returns>List of Journals</returns>
+        private List<FileInfo> GetJournalsDirectory(string directoryPathInput)
+        {
+            try
+            {
+                //finds path to Users folder ("C:\Users\<user>)"
+                directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+                if (Environment.OSVersion.Version.Major >= 6)
+                {
+                    directoryPath = Directory.GetParent(directoryPath).ToString();
+                }
+                //regex that matches ED journals names
+                Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
+                DirectoryInfo directory = new DirectoryInfo(directoryPathInput);
+                //field of unsorted files from directory above
                 FileInfo[] unsortedFiles = directory.GetFiles("*.log");
                 //List for sorted ED log files from directory
                 List<FileInfo> sortedFilesList = new List<FileInfo>();
@@ -284,13 +340,15 @@ namespace TKC
                 int index = 0;
                 while (index < unsortedFiles.Length)
                 {
-                    if(regex.IsMatch(unsortedFiles[index].Name))
+                    if (regex.IsMatch(unsortedFiles[index].Name))
                     {
                         sortedFilesList.Add(unsortedFiles[index]);
+                        Console.WriteLine(unsortedFiles[index].Name);
                     }
                     index++;
                 }
-                
+                //Orders list by Last time it was written into (descending)
+                sortedFilesList = sortedFilesList.OrderBy(x => x.LastWriteTime).ToList();
                 return sortedFilesList;
             }
             catch (DirectoryNotFoundException e)
@@ -299,13 +357,28 @@ namespace TKC
                 throw;
 
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 MessageBox.Show("Error:  " + e.Message);
                 ErrorLogging.LogError(e);
                 throw;
             }
 
+        }
+
+        private List<FileInfo> SelectDirectory()
+        { 
+            //If app cant find default ED log directory. Alerts user to select directory
+            MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+            FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            {
+                return GetJournalsDirectory(folderBrowserDialog1.SelectedPath);
+            }
+            else
+            {
+                return GetJournalsDirectory("");
+            }
         }
     }
 }
