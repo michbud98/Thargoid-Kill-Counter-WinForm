@@ -15,6 +15,12 @@ namespace TKC
         {
             r1.ReadDirectory();
             KillCounter.Text = r1.printAllKills();
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            r1.ReadLastJsonFile();
         }
     }
 }

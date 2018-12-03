@@ -9,12 +9,12 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-
+    //TODO zjistit co je internal
 
     /// <summary>
     /// Class for saving Timestamp and name of events from JSON file
     /// </summary>
-    public class EDEvent
+    internal class EDEvent
     {
 
         public DateTime timestamp { get; set; }
@@ -31,7 +31,7 @@ namespace TKC
     /// <summary>
     /// Inherited Class from EDEvent which saves data about thargoid kills
     /// </summary>
-    public class ThargoidKillEvent : EDEvent
+    internal class ThargoidKillEvent : EDEvent
     {
         /// <summary>
         /// Reward -- in Credits, tels us which thargoid we killed 10 k Scout, 2 mil Cyclops, 6 mil Basillisk, 10 mil Medusa, 15 mil Hydra
@@ -107,7 +107,7 @@ namespace TKC
         /// <returns>String of thargoid kills</returns>
         public string printAllKills()
         {
-            return "Kills from all logs:" + "\r\n" +"Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " + 
+            return "Kills from all Journals:" + "\r\n" +"Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " + 
                 medusa + "\r\nHydra: " + hydra + "\r\nUnknown " + unknown;
         }
 
@@ -117,7 +117,7 @@ namespace TKC
         /// <param name="e1"> converted JSON text to class </param>
         /// <param name="JSONStringLine"> JSON text </param>
         private void DetectThargoidKill(EDEvent e1, string JSONStringLine)
-        {            
+        {
             try
             {
 
@@ -171,7 +171,7 @@ namespace TKC
         /// Method which reads JSON file 
         /// </summary>
         /// <param name="filePath"> - a path to a file</param>
-        public void ReadJsonFile(string filePath)
+        private void ReadJsonFile(string filePath)
         {
             //debug integer for current line of reading
             int line = 1;
@@ -181,15 +181,14 @@ namespace TKC
             try
             {
                 string path = filePath; //Path of a file
-                JSONStringLine = ""; //Variable for JSON text line
-                EDEvent e1;
+                EDEvent currentEvent;
                 fileReader = new System.IO.StreamReader(path); //Streamreader which reads file line by line
                 while ((JSONStringLine = fileReader.ReadLine()) != null)
                 {
                     //JSON convertor which converts JSON to class variables
-                    e1 = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                    currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                     line++;
-                    DetectThargoidKill(e1, JSONStringLine);
+                    DetectThargoidKill(currentEvent, JSONStringLine);
                 }
             }
             catch (JsonReaderException e)
@@ -218,9 +217,100 @@ namespace TKC
                 fileReader.Close();
             }
         }
-       
+
         /// <summary>
-        /// Reads all log files in selected directory
+        /// Reads last Log in real time while game is running(reads until user closes Elite dangerous)
+        /// </summary>
+        /// <param name="sortedLogList"> Sorted List of Journals</param>
+        public void ReadLastJsonFile()
+        {
+           // List<FileInfo> sortedJournalsList
+            //TODO(must wait if something writes in file)
+            //debug integer for current line of reading
+            int line = 1;
+
+            int endLine = 0;
+            //debug string for current JSONStringLine
+            string JSONStringLine = "";
+            StreamReader fileReader = null;
+            //try
+            //{
+                FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
+                FileInfo lastLogCheck = lastLog;
+                string path = lastLog.FullName;
+                EDEvent currentEvent = null;
+                fileReader = new StreamReader(path);
+                 //ends if EDEvent.@event == "Shutdown" 
+                 bool endOfTheCycle = true;
+            bool firstRead = true;
+
+                while (endOfTheCycle == true)
+                {
+                    if ((JSONStringLine = fileReader.ReadLine()) != null)
+                    {
+                    //JSON convertor which converts JSON to class variables
+                    currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                    if(currentEvent != null && JSONStringLine == null && firstRead == true || line > endLine )
+                    {
+                        line++;
+                        Console.WriteLine(JSONStringLine);
+                        Console.WriteLine(currentEvent.ToString());
+                        //DetectThargoidKill(currentEvent, JSONStringLine);
+                    }
+                    
+                    if (currentEvent == null)
+                    {
+                        bool fileChanged = false;
+                        DateTime currentLastTimeWritten = DateTime.Now;
+                        endLine = line;
+                        firstRead = false;
+                        while (fileChanged == false)
+                        {
+                            lastLogCheck = new FileInfo(path);
+                            DateTime lastLogCheckTime = lastLogCheck.LastWriteTime;
+                            if (lastLogCheckTime > currentLastTimeWritten)
+                            {
+                                currentLastTimeWritten = lastLogCheck.LastWriteTime;
+                                fileReader = new StreamReader(path);
+                                fileChanged = true;
+                            }
+                            else
+                            {
+                                lastLogCheck = null;
+                                fileReader.Close();
+                                System.Threading.Thread.Sleep(5000);
+                            }
+                        }
+                        continue;
+                    }
+                    if (currentEvent.@event.Equals("Shutdown") == true)
+                    {
+                        fileReader.Close();
+                        endOfTheCycle = false;
+                    }
+                    
+                    }
+                }
+
+            
+            /*}
+            catch (JsonReaderException e)
+            {
+                ErrorLogging.LogError(e, JSONStringLine);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+                //ErrorLogging.LogError(e);
+                throw;
+            }finally
+            {
+                fileReader.Close();
+            }*/
+        }
+
+        /// <summary>
+        /// Reads all Journal files in selected directory
         /// </summary>
         public void ReadDirectory()
         {
@@ -229,25 +319,27 @@ namespace TKC
             try
             {
                 resetThargoidKills();
-                List<FileInfo> filesList = JSONReaderInstance.GetJournalsInDirectory();
+                List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";
-                for (int i = 0; i < filesList.Count; i++)
+                //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
+                for (int i = 0; i < journalsList.Count - 1; i++)
                 {
-                    path = filesList[i].FullName;
+                    path = journalsList[i].FullName;
                     //Console.WriteLine("Reading: " + path);
-                    for (int j = 0; j <= 0; ++i)
+                    for (int j = 0; j <= numberOfRetries; ++j)
                     {
                         try
                         {
                             JSONReaderInstance.ReadJsonFile(path);
                             break;
                         }
-                        catch (IOException) when (i <= numberOfRetries)
+                        catch (IOException) when (j <= numberOfRetries)
                         {
                             System.Threading.Thread.Sleep(delay);
                         }
                     }
                 }
+                
                 //Initiates garbage collection at the end
                 GC.Collect();
             }
@@ -258,9 +350,10 @@ namespace TKC
             }
             
         }
-
+        
         //debug string for current directory path
         string directoryPath;
+        List<FileInfo> sortedJournalsList = null;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
         /// </summary>
@@ -279,24 +372,25 @@ namespace TKC
                 Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
                 DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
                 //field of unsorted files from directory above
-                FileInfo[] unsortedLogs = directory.GetFiles("*.log");
-                //List for sorted ED log files from directory
-                List<FileInfo> sortedLogsList = new List<FileInfo>();
+                FileInfo[] unsortedJournals = directory.GetFiles("*.log");
+                //List for sorted ED Journal files from directory
+                //List<FileInfo>
+                sortedJournalsList = new List<FileInfo>();
 
-                //matches filenames with regex and sorts ED log files from others
+                //matches filenames with regex and sorts ED Journal files from others
                 int index = 0;
-                while (index < unsortedLogs.Length)
+                while (index < unsortedJournals.Length)
                 {
-                    if (regex.IsMatch(unsortedLogs[index].Name))
+                    if (regex.IsMatch(unsortedJournals[index].Name))
                     {
-                        sortedLogsList.Add(unsortedLogs[index]);
-
+                        sortedJournalsList.Add(unsortedJournals[index]);
                     }
                     index++;
                 }
                 //Orders list by Last time it was written into (descending)
-                sortedLogsList = sortedLogsList.OrderBy(x => x.LastWriteTime).ToList();
-                return sortedLogsList;
+                sortedJournalsList = sortedJournalsList.OrderBy(x => x.LastWriteTime).ToList();
+                
+                return sortedJournalsList;
             }
             catch (DirectoryNotFoundException e)
             {
