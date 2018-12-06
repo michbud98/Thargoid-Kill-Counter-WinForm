@@ -20,7 +20,8 @@ namespace TKC
 
         private void button1_Click(object sender, EventArgs e)
         {
-            r1.ReadLastJsonFile();
+            r1.ReadLastJsonFileInRealTime();
+            KillCounter.Text = r1.printAllKills();
         }
     }
 }

@@ -221,92 +221,107 @@ namespace TKC
         /// <summary>
         /// Reads last Log in real time while game is running(reads until user closes Elite dangerous)
         /// </summary>
-        /// <param name="sortedLogList"> Sorted List of Journals</param>
-        public void ReadLastJsonFile()
+        public void ReadLastJsonFileInRealTime()
         {
-           // List<FileInfo> sortedJournalsList
-            //TODO(must wait if something writes in file)
-            //debug integer for current line of reading
+            //integer for current line of reading
             int line = 1;
-
+            //integer which indicates last line that have been read (reader wont read same lines every cycle)
             int endLine = 0;
             //debug string for current JSONStringLine
             string JSONStringLine = "";
             StreamReader fileReader = null;
-            //try
-            //{
+            try
+            {
+                //last log which will be read in realtime
                 FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
-                FileInfo lastLogCheck = lastLog;
+                //string for file path
                 string path = lastLog.FullName;
                 EDEvent currentEvent = null;
                 fileReader = new StreamReader(path);
-                 //ends if EDEvent.@event == "Shutdown" 
-                 bool endOfTheCycle = true;
-            bool firstRead = true;
+                //boolean which ends whole reading cycle ends if EDEvent.@event == "Shutdown" 
+                bool endOfTheCycle = true;
+                //boolean which states if file has been read for a first time
 
                 while (endOfTheCycle == true)
                 {
                     if ((JSONStringLine = fileReader.ReadLine()) != null)
                     {
-                    //JSON convertor which converts JSON to class variables
-                    currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                    if(currentEvent != null && JSONStringLine == null && firstRead == true || line > endLine )
-                    {
-                        line++;
-                        Console.WriteLine(JSONStringLine);
-                        Console.WriteLine(currentEvent.ToString());
-                        //DetectThargoidKill(currentEvent, JSONStringLine);
-                    }
-                    
-                    if (currentEvent == null)
-                    {
-                        bool fileChanged = false;
-                        DateTime currentLastTimeWritten = DateTime.Now;
-                        endLine = line;
-                        firstRead = false;
-                        while (fileChanged == false)
+                        try
                         {
-                            lastLogCheck = new FileInfo(path);
-                            DateTime lastLogCheckTime = lastLogCheck.LastWriteTime;
-                            if (lastLogCheckTime > currentLastTimeWritten)
+                            currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                        }
+                        catch (JsonReaderException e)
+                        {
+                            ErrorLogging.LogError(e, JSONStringLine);
+                        }
+                        //true if reader read line which he already read
+                        if (line < endLine)
+                        {
+                            line++;
+                        }
+                        //true if reader read line which he didnt read before
+                        else if (line >= endLine )
+                        {
+                            
+                            try
                             {
-                                currentLastTimeWritten = lastLogCheck.LastWriteTime;
-                                fileReader = new StreamReader(path);
-                                fileChanged = true;
-                            }
-                            else
+                                line++;
+                                DetectThargoidKill(currentEvent, JSONStringLine);
+                            }catch(NullReferenceException)
                             {
-                                lastLogCheck = null;
-                                fileReader.Close();
-                                System.Threading.Thread.Sleep(5000);
+                                //catches NullReference exception so that rest of the program can continue
+                                //do nothing
                             }
                         }
-                        continue;
-                    }
-                    if (currentEvent.@event.Equals("Shutdown") == true)
-                    {
-                        fileReader.Close();
-                        endOfTheCycle = false;
-                    }
-                    
+                        //true if reader finds shutdown event at the end of file
+                        if (currentEvent.@event.Equals("Shutdown") == true)
+                        {
+                            fileReader.Close();
+                            endOfTheCycle = false;
+                            break;
+                        }
+                        //true if reader reaches end of file
+                        if (fileReader.EndOfStream == true)
+                        {
+                            //bool which controls if file have changed if true restarts the reading cycle above
+                            bool fileChanged = false;
+                            //value which saves last time file changed
+                            DateTime currentLastTimeWritten = DateTime.Now;
+                            endLine = line;
+                            while (fileChanged == false)
+                            {
+                                lastLog = new FileInfo(path);
+                                //true if file changed
+                                if (lastLog.LastWriteTime > currentLastTimeWritten)
+                                {
+                                    currentLastTimeWritten = lastLog.LastWriteTime;
+                                    fileReader = new StreamReader(path);
+                                    fileChanged = true;
+                                    line = 1;
+                                }
+                                //else sleeps thread and restarts fileChanged cycle 5 sec later
+                                else
+                                {
+                                    lastLog = null;
+                                    fileReader.Close();
+                                    System.Threading.Thread.Sleep(5000);
+                                }
+                            }
+                            //restarts the reading cycle
+                            continue;
+                        }
                     }
                 }
-
-            
-            /*}
-            catch (JsonReaderException e)
-            {
-                ErrorLogging.LogError(e, JSONStringLine);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.StackTrace);
-                //ErrorLogging.LogError(e);
+                ErrorLogging.LogError(e);
                 throw;
             }finally
             {
                 fileReader.Close();
-            }*/
+            }
         }
 
         /// <summary>
@@ -353,6 +368,7 @@ namespace TKC
         
         //debug string for current directory path
         string directoryPath;
+        //List of sorted Journals
         List<FileInfo> sortedJournalsList = null;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
