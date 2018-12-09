@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace TKC
@@ -240,7 +241,6 @@ namespace TKC
                 fileReader = new StreamReader(path);
                 //boolean which ends whole reading cycle ends if EDEvent.@event == "Shutdown" 
                 bool endOfTheCycle = true;
-                //boolean which states if file has been read for a first time
 
                 while (endOfTheCycle == true)
                 {
@@ -260,7 +260,7 @@ namespace TKC
                             line++;
                         }
                         //true if reader read line which he didnt read before
-                        else if (line >= endLine )
+                        else if (line >= endLine)
                         {
                             
                             try
@@ -276,6 +276,7 @@ namespace TKC
                         //true if reader finds shutdown event at the end of file
                         if (currentEvent.@event.Equals("Shutdown") == true)
                         {
+                            Console.WriteLine("Thread ended");
                             fileReader.Close();
                             endOfTheCycle = false;
                             break;
@@ -294,6 +295,7 @@ namespace TKC
                                 //true if file changed
                                 if (lastLog.LastWriteTime > currentLastTimeWritten)
                                 {
+                                    Console.WriteLine("File Changed");
                                     currentLastTimeWritten = lastLog.LastWriteTime;
                                     fileReader = new StreamReader(path);
                                     fileChanged = true;
@@ -302,9 +304,10 @@ namespace TKC
                                 //else sleeps thread and restarts fileChanged cycle 5 sec later
                                 else
                                 {
+                                    Console.WriteLine("Thread waiting");
                                     lastLog = null;
                                     fileReader.Close();
-                                    System.Threading.Thread.Sleep(5000);
+                                    Thread.Sleep(5000);
                                 }
                             }
                             //restarts the reading cycle
