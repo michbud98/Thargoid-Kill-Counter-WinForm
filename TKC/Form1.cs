@@ -15,7 +15,7 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             r1.ReadDirectory();
-            KillCounter.Text = r1.printAllKills();
+            KillCounter.Text = r1.PrintAllKills();
 
         }
 
@@ -44,11 +44,11 @@ namespace TKC
             while (endOfTheCycle == true)
             {
                 now = DateTime.Now;
-                if (now >= before)
+                if (now >= before && r1.CheckKillChange() == true)
                 {
                     before = now.AddSeconds(10);
                     Console.WriteLine("Printing kills");
-                    KillCounterSetText(r1.printAllKills());
+                    KillCounterSetText(r1.PrintAllKills());
                 }else
                 {
                     Thread.Sleep(10000);
@@ -66,7 +66,7 @@ namespace TKC
         /// Method for thread safe calls of Windows forms KillCounter label
         /// </summary>
         /// <param name="text">Thargoid kills in string</param>
-        private void KillCounterSetText(string text)
+        public void KillCounterSetText(string text)
         {
             // InvokeRequired required compares the thread ID of the
             // calling thread to the thread ID of the creating thread.
