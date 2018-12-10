@@ -48,13 +48,14 @@ namespace TKC
         }
     }
 
-    
+
 
     /// <summary>
     /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
     public class JSONReaderSingleton
     {
+        int lastAllTypesKills { get; set; }
         /// <summary>
         /// <param name="scout"´> - variable for number of scout kills</param>
         /// <param name="cyclops"´> - variable for number of cyclops kills</param>
@@ -69,11 +70,12 @@ namespace TKC
         int medusa { get; set; }
         int hydra { get; set; }
         int unknown { get; set; }
+        int allTypesKills { get; set; }
 
         /// <summary>
         /// Method which resets all thargoid kills
         /// </summary>
-        private void resetThargoidKills()
+        private void ResetThargoidKills()
         {
             scout = 0;
             cyclops = 0;
@@ -81,9 +83,37 @@ namespace TKC
             medusa = 0;
             hydra = 0;
             unknown = 0;
+            allTypesKills = 0;
+            lastAllTypesKills = 0;
         }
-        
 
+        /// <summary>
+        /// Prints thargoid kills to text
+        /// </summary>
+        /// <returns>String of thargoid kills</returns>
+        public string PrintAllKills()
+        {
+            return "Kills from all Journals:" + "\r\n" + "Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " +
+                medusa + "\r\nHydra: " + hydra + "\r\nUnknown " + unknown + "\r\nTotal " + allTypesKills;
+        }
+
+        /// <summary>
+        /// Checks if kill count changed
+        /// </summary>
+        /// <returns>bool true or false</returns>
+        public bool CheckKillChange()
+        {
+
+            if (allTypesKills > lastAllTypesKills)
+            {
+                lastAllTypesKills = allTypesKills;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
@@ -93,24 +123,16 @@ namespace TKC
         /// <returns>Single class of JSONReaders</returns>
         public static JSONReaderSingleton getInstance()
         {
-            
+
             if (JSONReaderInstance == null)
             {
                 JSONReaderInstance = new JSONReaderSingleton();
             }
-            
+
             return JSONReaderInstance;
         }
 
-        /// <summary>
-        /// Prints thargoid kills to text
-        /// </summary>
-        /// <returns>String of thargoid kills</returns>
-        public string printAllKills()
-        {
-            return "Kills from all Journals:" + "\r\n" +"Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " + 
-                medusa + "\r\nHydra: " + hydra + "\r\nUnknown " + unknown;
-        }
+        
 
         /// <summary>
         /// Detects thargoid kill from EDEvent class
@@ -138,21 +160,27 @@ namespace TKC
                         {
                             case 10000:
                                 scout++;
+                                allTypesKills++;
                                 break;
                             case 2000000:
                                 cyclops++;
+                                allTypesKills++;
                                 break;
                             case 6000000:
                                 basillisk++;
+                                allTypesKills++;
                                 break;
                             case 10000000:
                                 medusa++;
+                                allTypesKills++;
                                 break;
                             case 15000000:
                                 hydra++;
+                                allTypesKills++;
                                 break;
                             default:
                                 unknown++;
+                                allTypesKills++;
                                 ErrorLogging.LogUnknownThargoidType(JSONStringLine);
                                 break;
                         }
@@ -220,7 +248,7 @@ namespace TKC
         }
 
         /// <summary>
-        /// Reads last Log in real time while game is running(reads until user closes Elite dangerous)
+        /// Reads last Log in real time while game is running(reads or tries to find a new file to read until user closes application)
         /// </summary>
         public void ReadLastJsonFileInRealTime()
         {
@@ -239,10 +267,8 @@ namespace TKC
                 string path = lastLog.FullName;
                 EDEvent currentEvent = null;
                 fileReader = new StreamReader(path);
-                //boolean which ends whole reading cycle ends if EDEvent.@event == "Shutdown" 
-                bool endOfTheCycle = true;
 
-                while (endOfTheCycle == true)
+                while (true)
                 {
                     if ((JSONStringLine = fileReader.ReadLine()) != null)
                     {
@@ -276,10 +302,30 @@ namespace TKC
                         //true if reader finds shutdown event at the end of file
                         if (currentEvent.@event.Equals("Shutdown") == true)
                         {
-                            Console.WriteLine("Thread ended");
-                            fileReader.Close();
-                            endOfTheCycle = false;
-                            break;
+                            //bool which controls if new file last file was found if true restarts reading cycle
+                            bool newLastFileFound = false;
+                            while(newLastFileFound == false)
+                            {
+                                //Console.WriteLine("Thread searching for new file");
+                                GetJournalsInDirectory();
+                                FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
+                                if (!logCheck.Name.Equals(lastLog.Name))
+                                {
+                                    //Console.WriteLine("Thread found new file");
+                                    lastLog = logCheck;
+                                    path = lastLog.FullName;
+                                    fileReader = new StreamReader(path);
+                                    newLastFileFound = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    //Console.WriteLine("Thread didnt found new file");
+                                    Thread.Sleep(5000);
+                                }
+                            }
+                            continue;
+
                         }
                         //true if reader reaches end of file
                         if (fileReader.EndOfStream == true)
@@ -336,7 +382,7 @@ namespace TKC
             const int delay = 3000;
             try
             {
-                resetThargoidKills();
+                ResetThargoidKills();
                 List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";
                 //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
@@ -496,6 +542,6 @@ namespace TKC
             {
                 return GetJournalsInDirectory("");
             }
-        }
+        } 
     }
 }
