@@ -10,18 +10,18 @@ namespace TKC
         {
             InitializeComponent();
         }
-        JSONReaderSingleton r1 = JSONReaderSingleton.getInstance();
+        JSONReaderSingleton reader = JSONReaderSingleton.getInstance();
        
         private void Form1_Load(object sender, EventArgs e)
         {
-            r1.ReadDirectory();
-            KillCounter.Text = r1.PrintAllKills();
+            reader.ReadDirectory();
+            KillCounter.Text = reader.counter.PrintAllKills();
 
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Thread readingThread = new Thread(r1.ReadLastJsonFileInRealTime)
+            Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
             {
                 Name = "Real Time Reading",
                 IsBackground = true
@@ -44,11 +44,11 @@ namespace TKC
             while (endOfTheCycle == true)
             {
                 now = DateTime.Now;
-                if (now >= before && r1.CheckKillChange() == true)
+                if (now >= before && reader.counter.CheckKillChange() == true)
                 {
                     before = now.AddSeconds(10);
                     Console.WriteLine("Printing kills");
-                    KillCounterSetText(r1.PrintAllKills());
+                    KillCounterSetText(reader.counter.PrintAllKills());
                 }else
                 {
                     Thread.Sleep(10000);
