@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-    //TODO zjistit co je internal
+    
 
     /// <summary>
     /// Class for saving Timestamp and name of events from JSON file
@@ -55,65 +55,7 @@ namespace TKC
     /// </summary>
     public class JSONReaderSingleton
     {
-        int lastAllTypesKills { get; set; }
-        /// <summary>
-        /// <param name="scout"´> - variable for number of scout kills</param>
-        /// <param name="cyclops"´> - variable for number of cyclops kills</param>
-        /// <param name="basillisk"´> - variable for number of basillisk kills</param>
-        /// <param name="medusa"´> - variable for number of medusa kills</param>
-        /// <param name="hydra"´> - variable for number of hydra kills</param>
-        /// <param name="unknown"´> - variable which stores kills of unknown thargoid types</param>
-        /// </summary>
-        int scout { get; set; }
-        int cyclops { get; set; }
-        int basillisk { get; set; }
-        int medusa { get; set; }
-        int hydra { get; set; }
-        int unknown { get; set; }
-        int allTypesKills { get; set; }
-
-        /// <summary>
-        /// Method which resets all thargoid kills
-        /// </summary>
-        private void ResetThargoidKills()
-        {
-            scout = 0;
-            cyclops = 0;
-            basillisk = 0;
-            medusa = 0;
-            hydra = 0;
-            unknown = 0;
-            allTypesKills = 0;
-            lastAllTypesKills = 0;
-        }
-
-        /// <summary>
-        /// Prints thargoid kills to text
-        /// </summary>
-        /// <returns>String of thargoid kills</returns>
-        public string PrintAllKills()
-        {
-            return "Kills from all Journals:" + "\r\n" + "Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " +
-                medusa + "\r\nHydra: " + hydra + "\r\nUnknown " + unknown + "\r\nTotal " + allTypesKills;
-        }
-
-        /// <summary>
-        /// Checks if kill count changed
-        /// </summary>
-        /// <returns>bool true or false</returns>
-        public bool CheckKillChange()
-        {
-
-            if (allTypesKills > lastAllTypesKills)
-            {
-                lastAllTypesKills = allTypesKills;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        public KillCounter counter = new KillCounter();
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
@@ -131,9 +73,6 @@ namespace TKC
 
             return JSONReaderInstance;
         }
-
-        
-
         /// <summary>
         /// Detects thargoid kill from EDEvent class
         /// </summary>
@@ -159,28 +98,28 @@ namespace TKC
                         switch (caseSwitch)
                         {
                             case 10000:
-                                scout++;
-                                allTypesKills++;
+                                counter.scout++;
+                                counter.allTypesKills++;
                                 break;
                             case 2000000:
-                                cyclops++;
-                                allTypesKills++;
+                                counter.cyclops++;
+                                counter.allTypesKills++;
                                 break;
                             case 6000000:
-                                basillisk++;
-                                allTypesKills++;
+                                counter.basillisk++;
+                                counter.allTypesKills++;
                                 break;
                             case 10000000:
-                                medusa++;
-                                allTypesKills++;
+                                counter.medusa++;
+                                counter.allTypesKills++;
                                 break;
                             case 15000000:
-                                hydra++;
-                                allTypesKills++;
+                                counter.hydra++;
+                                counter.allTypesKills++;
                                 break;
                             default:
-                                unknown++;
-                                allTypesKills++;
+                                counter.unknown++;
+                                counter.allTypesKills++;
                                 ErrorLogging.LogUnknownThargoidType(JSONStringLine);
                                 break;
                         }
@@ -280,51 +219,53 @@ namespace TKC
                         {
                             ErrorLogging.LogError(e, JSONStringLine);
                         }
-                        //true if reader read line which he already read
-                        if (line < endLine)
+                        
+                        try
                         {
-                            line++;
-                        }
-                        //true if reader read line which he didnt read before
-                        else if (line >= endLine)
-                        {
-                            try
+                            //true if reader read line which he already read
+                            if (line < endLine)
+                            {
+                                line++;
+                            }//true if reader read line which he didnt read before
+                            else if (line >= endLine)
                             {
                                 line++;
                                 DetectThargoidKill(currentEvent, JSONStringLine);
-                            }catch(NullReferenceException)
+                            }//true if reader finds shutdown event at the end of file
+                            if (currentEvent.@event.Equals("Shutdown") == true)
                             {
-                                //catches NullReference exception so that rest of the program can continue
-                                //do nothing
+                                fileReader.Close();
+                                //bool which controls if new file last file was found if true restarts reading cycle
+                                bool newLastFileFound = false;
+                                while (newLastFileFound == false)
+                                {
+                                    Console.WriteLine("Thread searching for new file");
+                                    GetJournalsInDirectory();
+                                    FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
+                                    if (!logCheck.Name.Equals(lastLog.Name))
+                                    {
+                                        Console.WriteLine("Thread found new file");
+                                        lastLog = logCheck;
+                                        path = lastLog.FullName;
+                                        fileReader = new StreamReader(path);
+                                        newLastFileFound = true;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        //Console.WriteLine("Thread didnt found new file");
+                                        Thread.Sleep(5000);
+                                    }
+                                }
+                                continue;
                             }
                         }
-                        //true if reader finds shutdown event at the end of file
-                        if (currentEvent.@event.Equals("Shutdown") == true)
+                        catch (NullReferenceException)
                         {
-                            //bool which controls if new file last file was found if true restarts reading cycle
-                            bool newLastFileFound = false;
-                            while(newLastFileFound == false)
-                            {
-                                //Console.WriteLine("Thread searching for new file");
-                                GetJournalsInDirectory();
-                                FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
-                                if (!logCheck.Name.Equals(lastLog.Name))
-                                {
-                                    //Console.WriteLine("Thread found new file");
-                                    lastLog = logCheck;
-                                    path = lastLog.FullName;
-                                    fileReader = new StreamReader(path);
-                                    newLastFileFound = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    //Console.WriteLine("Thread didnt found new file");
-                                    Thread.Sleep(5000);
-                                }
-                            }
-                            continue;
+                            //catches NullReference exception so that rest of the program can continue
+                            //do nothing
                         }
+
                         //true if reader reaches end of file
                         if (fileReader.EndOfStream == true)
                         {
@@ -380,7 +321,7 @@ namespace TKC
             const int delay = 3000;
             try
             {
-                ResetThargoidKills();
+                counter.ResetThargoidKills();
                 List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";
                 //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
