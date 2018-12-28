@@ -30,6 +30,7 @@
         {
             this.KillCounter = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.InfoLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // KillCounter
@@ -43,7 +44,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(272, 233);
+            this.button1.Location = new System.Drawing.Point(275, 184);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 40);
             this.button1.TabIndex = 1;
@@ -51,11 +52,21 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // InfoLabel
+            // 
+            this.InfoLabel.AutoSize = true;
+            this.InfoLabel.Location = new System.Drawing.Point(44, 297);
+            this.InfoLabel.Name = "InfoLabel";
+            this.InfoLabel.Size = new System.Drawing.Size(37, 20);
+            this.InfoLabel.TabIndex = 2;
+            this.InfoLabel.Text = "Info";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(474, 353);
+            this.Controls.Add(this.InfoLabel);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.KillCounter);
             this.Name = "Form1";
@@ -70,6 +81,7 @@
 
         private System.Windows.Forms.Label KillCounter;
         private System.Windows.Forms.Button button1;
+        public System.Windows.Forms.Label InfoLabel;
     }
 }
 

@@ -18,9 +18,17 @@ namespace TKC
         /// <param name="e"> Exception</param>
         public static void LogError(Exception e)
         {
+            string directoryPath;
+            //finds path to Users folder ("C:\Users\<user>)"
+            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                directoryPath = Directory.GetParent(directoryPath).ToString();
+            }
+            directoryPath += @"\Documents\TkcErrorLogs";
             string date = DateTime.Today.ToString("dd/MM/yyyy");
-            Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + @"\ErrorLogs");
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + @"ErrorLogs", "Log"+date+".txt");
+            Directory.CreateDirectory(directoryPath);
+            string filePath = Path.Combine(directoryPath, "Log"+date+".txt");
 
             StreamWriter writer = new StreamWriter(filePath, true);
             writer.WriteLine("-----------------------------------------------------------------------------");
@@ -46,9 +54,17 @@ namespace TKC
         /// <param name="input1"> Generic for one input</param>
         public static void LogError<T>(Exception e, T input1)
         {
+            string directoryPath;
+            //finds path to Users folder ("C:\Users\<user>)"
+            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                directoryPath = Directory.GetParent(directoryPath).ToString();
+            }
+            directoryPath += @"\Documents\TkcErrorLogs";
             string date = DateTime.Today.ToString("dd/MM/yyyy");
-            Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + @"\ErrorLogs");
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + @"ErrorLogs", "Log"+date+".txt");
+            Directory.CreateDirectory(directoryPath);
+            string filePath = Path.Combine(directoryPath, "Log" + date + ".txt");
 
             StreamWriter writer = new StreamWriter(filePath, true);
             writer.WriteLine("-----------------------------------------------------------------------------");
@@ -72,9 +88,17 @@ namespace TKC
         /// <param name="JSONString">JSON string input</param>
         public static void LogUnknownThargoidType(String JSONString)
         {
+            string directoryPath;
+            //finds path to Users folder ("C:\Users\<user>)"
+            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                directoryPath = Directory.GetParent(directoryPath).ToString();
+            }
+            directoryPath += @"\Documents\TkcErrorLogs";
             string date = DateTime.Today.ToString("dd/MM/yyyy");
-            Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + @"\ErrorLogs");
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory + @"ErrorLogs", "UnknownThargoid" + date + ".txt");
+            Directory.CreateDirectory(directoryPath);
+            string filePath = Path.Combine(directoryPath, "UnknownThargoid" + date + ".txt");
 
             StreamWriter writer = new StreamWriter(filePath, true);
             writer.WriteLine("-----------------------------------------------------------------------------");

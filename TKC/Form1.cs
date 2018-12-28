@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -21,37 +22,41 @@ namespace TKC
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
-            {
-                Name = "Real Time Reading",
-                IsBackground = true
-            };
+             Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
+             {
+                 Name = "Real Time Reading",
+                 IsBackground = true
+             };
 
-            Thread printingThread = new Thread(printKillsInIntervals)
-            {
-                Name = "Printing in Intervals",
-                IsBackground = true
-            };
-            readingThread.Start();
-            printingThread.Start();
+             Thread printingThread = new Thread(printKillsInIntervals)
+             {
+                 Name = "Printing in Intervals",
+                 IsBackground = true
+             };
+             readingThread.Start();
+             printingThread.Start();
+
         }
-
+        /// <summary>
+        /// Print kills in intervals
+        /// </summary>
         private void printKillsInIntervals()
         {
-            DateTime now = DateTime.Now;
-            DateTime before = now;
             Boolean endOfTheCycle = true;
             while (endOfTheCycle == true)
             {
-                now = DateTime.Now;
-                if (now >= before && reader.counter.CheckKillChange() == true)
+
+                if (reader.counter.CheckKillChange() == true)
                 {
-                    before = now.AddSeconds(10);
-                    Console.WriteLine("Printing kills");
                     KillCounterSetText(reader.counter.PrintAllKills());
-                }else
+                }
+                else if(reader.listChange == true)
                 {
-                    Thread.Sleep(10000);
+                    InfoLabelSetText(reader.getLastAction());
+                }
+                else
+                {
+                    Thread.Sleep(1000);
                 }
             }
         }
@@ -79,6 +84,21 @@ namespace TKC
             else
             {
                 this.KillCounter.Text = text;
+            }
+        }
+        public void InfoLabelSetText(string text)
+        {
+            // InvokeRequired required compares the thread ID of the
+            // calling thread to the thread ID of the creating thread.
+            // If these threads are different, it returns true.
+            if (this.InfoLabel.InvokeRequired)
+            {
+                StringArgReturningVoidDelegate d = new StringArgReturningVoidDelegate(InfoLabelSetText);
+                this.Invoke(d, new object[] { text });
+            }
+            else
+            {
+                this.InfoLabel.Text = text;
             }
         }
     }

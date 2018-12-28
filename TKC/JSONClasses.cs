@@ -56,7 +56,7 @@ namespace TKC
     public class JSONReaderSingleton
     {
         public KillCounter counter = new KillCounter();
-
+        
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
         /// <summary>
@@ -239,12 +239,13 @@ namespace TKC
                                 bool newLastFileFound = false;
                                 while (newLastFileFound == false)
                                 {
-                                    Console.WriteLine("Thread searching for new file");
+
+                                    addAction("Thread searching for new file");
                                     GetJournalsInDirectory();
                                     FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
                                     if (!logCheck.Name.Equals(lastLog.Name))
                                     {
-                                        Console.WriteLine("Thread found new file");
+                                        addAction("Thread found new file");
                                         lastLog = logCheck;
                                         path = lastLog.FullName;
                                         fileReader = new StreamReader(path);
@@ -253,7 +254,6 @@ namespace TKC
                                     }
                                     else
                                     {
-                                        //Console.WriteLine("Thread didnt found new file");
                                         Thread.Sleep(5000);
                                     }
                                 }
@@ -280,7 +280,7 @@ namespace TKC
                                 //true if file changed
                                 if (lastLog.LastWriteTime > currentLastTimeWritten)
                                 {
-                                    Console.WriteLine("File Changed");
+                                    addAction("File Changed");
                                     currentLastTimeWritten = lastLog.LastWriteTime;
                                     fileReader = new StreamReader(path);
                                     fileChanged = true;
@@ -289,7 +289,7 @@ namespace TKC
                                 //else sleeps thread and restarts fileChanged cycle 5 sec later
                                 else
                                 {
-                                    Console.WriteLine("Thread waiting");
+                                    addAction("Waiting for file change");
                                     lastLog = null;
                                     fileReader.Close();
                                     Thread.Sleep(5000);
@@ -303,7 +303,7 @@ namespace TKC
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.StackTrace);
+                MessageBox.Show("Error:  " + e.Message);
                 ErrorLogging.LogError(e);
                 throw;
             }finally
@@ -353,8 +353,7 @@ namespace TKC
             }
             
         }
-        
-        //debug string for current directory path
+
         string directoryPath;
         //List of sorted Journals
         List<FileInfo> sortedJournalsList = null;
@@ -420,12 +419,6 @@ namespace TKC
         {
             try
             {
-                //finds path to Users folder ("C:\Users\<user>)"
-                directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-                if (Environment.OSVersion.Version.Major >= 6)
-                {
-                    directoryPath = Directory.GetParent(directoryPath).ToString();
-                }
                 //regex that matches ED journals names
                 Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
                 DirectoryInfo directory = new DirectoryInfo(directoryPathInput);
@@ -441,7 +434,7 @@ namespace TKC
                     if (regex.IsMatch(unsortedFiles[index].Name))
                     {
                         sortedFilesList.Add(unsortedFiles[index]);
-                        Console.WriteLine(unsortedFiles[index].Name);
+                        //Console.WriteLine(unsortedFiles[index].Name);
                     }
                     index++;
                 }
@@ -481,8 +474,40 @@ namespace TKC
             {
                 return GetJournalsInDirectory("");
             }
-        } 
+        }
 
-        
+        /// <summary>
+        /// List which stores string that will be printed in InfoLabel
+        /// </summary>
+        List<string> currentAction = new List<string>();
+        /// <summary>
+        /// Controls if list changed or not
+        /// </summary>
+        public bool listChange;
+        /// <summary>
+        /// Adds action description in action list
+        /// </summary>
+        /// <param name="s">Action description in string</param>
+        private void addAction(string s)
+        {
+            if(currentAction.Contains(s))
+            {
+                int index = currentAction.IndexOf(s);
+                string tmp = currentAction[currentAction.Count - 1];
+                currentAction[currentAction.Count - 1] = s;
+                currentAction[index] = s;
+            }
+            else
+            {
+                currentAction.Add(s);
+            }
+            listChange = true;
+        }
+
+        public string getLastAction()
+        {
+            listChange = false;
+            return currentAction[currentAction.Count - 1];
+        }
     }
 }
