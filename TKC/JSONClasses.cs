@@ -120,7 +120,6 @@ namespace TKC
                             default:
                                 counter.unknown++;
                                 counter.allTypesKills++;
-                                ErrorLogging.LogUnknownThargoidType(JSONStringLine);
                                 break;
                         }
                     }
@@ -128,7 +127,6 @@ namespace TKC
             }catch(Exception e)
             {
                 MessageBox.Show("Error: Unknown in method DetectThargoidKill");
-                ErrorLogging.LogError(e, JSONStringLine);
                 throw;
             }
             
@@ -161,23 +159,21 @@ namespace TKC
             }
             catch (JsonReaderException e)
             {
-                ErrorLogging.LogError(e, JSONStringLine);
+
             }
             catch (FileNotFoundException e)
             {
 
                 MessageBox.Show("Error: File " + filePath + " not found");
-                ErrorLogging.LogError(e, filePath);
             }
             catch (IOException e)
             {
-                ErrorLogging.LogError(e);
+                
                 throw;
             }
             catch (Exception e)
             {
                 MessageBox.Show("Error: Unknown error in ReadJsonFile");
-                ErrorLogging.LogError(e,filePath);
                 throw;
             }
             finally
@@ -217,7 +213,6 @@ namespace TKC
                         }
                         catch (JsonReaderException e)
                         {
-                            ErrorLogging.LogError(e, JSONStringLine);
                         }
                         
                         try
@@ -304,8 +299,8 @@ namespace TKC
             catch (Exception e)
             {
                 MessageBox.Show("Error:  " + e.Message);
-                ErrorLogging.LogError(e);
                 throw;
+                
             }finally
             {
                 fileReader.Close();
@@ -348,7 +343,6 @@ namespace TKC
             }
             catch (DirectoryNotFoundException e)
             {
-                ErrorLogging.LogError(e);
                 MessageBox.Show("Error: Journals directory not found");
             }
             
@@ -397,14 +391,12 @@ namespace TKC
             }
             catch (DirectoryNotFoundException e)
             {
-                ErrorLogging.LogError(e, directoryPath);
                 return SelectDirectory();
 
             }
             catch (Exception e)
             {
                 MessageBox.Show("Error:  " + e.Message);
-                ErrorLogging.LogError(e);
                 throw;
             }
 
@@ -444,14 +436,13 @@ namespace TKC
             }
             catch (DirectoryNotFoundException e)
             {
-                ErrorLogging.LogError(e, directoryPath);
+                
                 throw;
 
             }
             catch (Exception e)
             {
                 MessageBox.Show("Error:  " + e.Message);
-                ErrorLogging.LogError(e);
                 throw;
             }
 

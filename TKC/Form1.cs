@@ -15,14 +15,15 @@ namespace TKC
        
         private void Form1_Load(object sender, EventArgs e)
         {
-            reader.ReadDirectory();
-            KillCounter.Text = reader.counter.PrintAllKills();
+            
 
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-             Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
+            reader.ReadDirectory();
+            KillCounter.Text = reader.counter.PrintAllKills();
+            Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
              {
                  Name = "Real Time Reading",
                  IsBackground = true
