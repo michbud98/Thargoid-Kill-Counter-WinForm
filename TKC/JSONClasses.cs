@@ -55,8 +55,14 @@ namespace TKC
     /// </summary>
     public class JSONReaderSingleton
     {
+
         public KillCounter counter = new KillCounter();
-        
+
+        /// <summary>
+        /// Error logger
+        /// </summary>
+        private static readonly log4net.ILog jsonReaderLog = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
         /// <summary>
@@ -82,7 +88,7 @@ namespace TKC
         {
             try
             {
-
+                
                 ThargoidKillEvent kill;
                 if (e1.@event.Equals("FactionKillBond"))
                 {
@@ -127,6 +133,7 @@ namespace TKC
             }catch(Exception e)
             {
                 MessageBox.Show("Error: Unknown in method DetectThargoidKill");
+                
                 throw;
             }
             
@@ -159,7 +166,7 @@ namespace TKC
             }
             catch (JsonReaderException e)
             {
-
+                
             }
             catch (FileNotFoundException e)
             {
