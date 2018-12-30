@@ -58,11 +58,6 @@ namespace TKC
 
         public KillCounter counter = new KillCounter();
 
-        /// <summary>
-        /// Error logger
-        /// </summary>
-        private static readonly log4net.ILog jsonReaderLog = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
         /// <summary>
@@ -96,8 +91,7 @@ namespace TKC
                     kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
                         new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
-                    if (kill.awardingFaction_Localised != null && kill.victimFaction_Localised != null &&
-                        kill.awardingFaction_Localised.Equals("Pilots Federation") && kill.victimFaction_Localised.Equals("Thargoids"))
+                    if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
 
                     {
                         int caseSwitch = kill.reward;
@@ -125,15 +119,18 @@ namespace TKC
                                 break;
                             default:
                                 counter.unknown++;
-                                counter.allTypesKills++;
                                 break;
                         }
                     }
                 }
-            }catch(Exception e)
+            }
+            catch(NullReferenceException e)
             {
-                MessageBox.Show("Error: Unknown in method DetectThargoidKill");
                 
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show("Error:" + e.Message);
                 throw;
             }
             
@@ -146,46 +143,37 @@ namespace TKC
         /// <param name="filePath"> - a path to a file</param>
         private void ReadJsonFile(string filePath)
         {
-            //debug integer for current line of reading
-            int line = 1;
-            //debug string for current JSONStringLine
-            string JSONStringLine = "";
-            StreamReader fileReader = null;
             try
             {
-                string path = filePath; //Path of a file
-                EDEvent currentEvent;
-                fileReader = new System.IO.StreamReader(path); //Streamreader which reads file line by line
-                while ((JSONStringLine = fileReader.ReadLine()) != null)
+                //integer for current line of reading
+                int line = 1;
+                //debug string for current JSONStringLine
+                string JSONStringLine = "";
+                FileStream fileStream = null;
+                StreamReader reader = null;
+                fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                reader = new StreamReader(fileStream);
+                EDEvent currentEvent = null;
+
+                while (!reader.EndOfStream)
                 {
-                    //JSON convertor which converts JSON to class variables
-                    currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                    line++;
-                    DetectThargoidKill(currentEvent, JSONStringLine);
+                    try
+                    {
+                        JSONStringLine = reader.ReadLine();
+                        currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                        line++;
+                        DetectThargoidKill(currentEvent, JSONStringLine);
+                    }
+                    catch (JsonReaderException e)
+                    {
+                        continue;
+                    }
                 }
             }
-            catch (JsonReaderException e)
+            catch(Exception e)
             {
-                
-            }
-            catch (FileNotFoundException e)
-            {
-
-                MessageBox.Show("Error: File " + filePath + " not found");
-            }
-            catch (IOException e)
-            {
-                
+                MessageBox.Show("Error:" + e.Message);
                 throw;
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("Error: Unknown error in ReadJsonFile");
-                throw;
-            }
-            finally
-            {
-                fileReader.Close();
             }
         }
 
@@ -211,8 +199,6 @@ namespace TKC
                 {
                     fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     reader = new StreamReader(fileStream);
-                    try
-                    {
                         while (true)
                         {
                             if (!reader.EndOfStream)
@@ -272,12 +258,7 @@ namespace TKC
                     {
                            
                     } 
-                }
-                catch(IOException e)
-                {
-                    Thread.Sleep(100);
-                        
-                } 
+                
             }
             catch (Exception e)
             {
@@ -327,13 +308,15 @@ namespace TKC
         {
             const int numberOfRetries = 20;
             const int delay = 3000;
+            int numberOfFiles = 0;
             try
             {
+                addAction("Reading Journals directory");
                 counter.ResetThargoidKills();
                 List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";
                 //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
-                for (int i = 0; i < journalsList.Count - 1; i++)
+                for (int i = 0; i < journalsList.Count -1; i++)
                 {
                     path = journalsList[i].FullName;
                     //Console.WriteLine("Reading: " + path);
@@ -342,6 +325,7 @@ namespace TKC
                         try
                         {
                             JSONReaderInstance.ReadJsonFile(path);
+                            numberOfFiles++;
                             break;
                         }
                         catch (IOException) when (j <= numberOfRetries)
@@ -350,11 +334,10 @@ namespace TKC
                         }
                     }
                 }
-                
                 //Initiates garbage collection at the end
                 GC.Collect();
             }
-            catch (DirectoryNotFoundException e)
+            catch (DirectoryNotFoundException)
             {
                 MessageBox.Show("Error: Journals directory not found");
             }
@@ -399,7 +382,6 @@ namespace TKC
                 }
                 //Orders list by Last time it was written into (descending)
                 sortedJournalsList = sortedJournalsList.OrderBy(x => x.LastWriteTime).ToList();
-                
                 return sortedJournalsList;
             }
             catch (DirectoryNotFoundException e)

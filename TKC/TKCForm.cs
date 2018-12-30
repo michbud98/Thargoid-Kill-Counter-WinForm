@@ -5,9 +5,9 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-    public partial class Form1 : Form
+    public partial class TKCForm : Form
     {
-        public Form1()
+        public TKCForm()
         {
             InitializeComponent();
         }

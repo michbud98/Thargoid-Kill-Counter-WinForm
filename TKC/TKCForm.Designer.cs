@@ -1,6 +1,6 @@
 ﻿namespace TKC
 {
-    partial class Form1
+    partial class TKCForm
     {
         /// <summary>
         /// Vyžaduje se proměnná návrháře.
