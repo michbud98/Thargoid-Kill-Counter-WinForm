@@ -83,16 +83,18 @@ namespace TKC
         {
             try
             {
-                
+
                 ThargoidKillEvent kill;
                 if (e1.@event.Equals("FactionKillBond"))
                 {
 
                     kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
                         new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-
-                    if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
-
+                    if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
+                    {
+                        //error Log
+                    }
+                    else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
                     {
                         int caseSwitch = kill.reward;
                         switch (caseSwitch)
@@ -124,11 +126,7 @@ namespace TKC
                     }
                 }
             }
-            catch(NullReferenceException e)
-            {
-                
-            }
-            catch(Exception e)
+            catch (Exception e)
             {
                 MessageBox.Show("Error:" + e.Message);
                 throw;
@@ -169,19 +167,18 @@ namespace TKC
                         continue;
                     }
                 }
+            }catch(Exception e)
+                {
+                    MessageBox.Show("Error:" + e.Message);
+                    throw;
+                }
             }
-            catch(Exception e)
-            {
-                MessageBox.Show("Error:" + e.Message);
-                throw;
-            }
-        }
 
-        /// <summary>
-        /// Reads last Log in real time while game is running(reads or tries to find a new file to read until user closes application)
-        /// </summary>
-        public void ReadLastJsonFileInRealTime()
-        {
+            /// <summary>
+            /// Reads last Log in real time while game is running(reads or tries to find a new file to read until user closes application)
+            /// </summary>
+            public void ReadLastJsonFileInRealTime()
+            {
             //integer for current line of reading
             int line = 1;
             //debug string for current JSONStringLine
@@ -199,70 +196,67 @@ namespace TKC
                 {
                     fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     reader = new StreamReader(fileStream);
-                        while (true)
-                        {
-                            if (!reader.EndOfStream)
-                            {
-                                addAction("Reading file");
-                                JSONStringLine = reader.ReadLine();
-                                currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                                line++;
-                                DetectThargoidKill(currentEvent, JSONStringLine);
+                    while (true)
+                    {
 
-                                if (currentEvent.@event.Equals("Shutdown") == true)
+                        if (!reader.EndOfStream)
+                        {
+                            addAction("Reading file");
+                            JSONStringLine = reader.ReadLine();
+                            currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                            line++;
+                            DetectThargoidKill(currentEvent, JSONStringLine);
+                        }else if(reader.EndOfStream)
+                        {
+                            addAction("Waiting for file change");
+                            bool fileChanged = false;
+                            //last time file was changed
+                            DateTime currentLastTimeWritten = DateTime.Now;
+                            while (fileChanged == false)
+                            {
+                                lastLog = new FileInfo(path);
+                                //gets journals in directory
+                                GetJournalsInDirectory();
+                                //gets current last log
+                                FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
+                                //true if file changed
+                                if (lastLog.LastWriteTime > currentLastTimeWritten)
+                                {
+
+                                    currentLastTimeWritten = lastLog.LastWriteTime;
+                                    fileChanged = true;
+
+                                }
+                                //True if at the end of file and there is a log file with information
+                                else if (reader.EndOfStream && !logCheck.Name.Equals(lastLog.Name))
                                 {
                                     line = 1;
-                                    fileStream.Close();
-                                    reader.Close();
-                                    addAction("Thread searching for new file");
-                                    //bool which controls if new file last file was found if true restarts reading cycle
-                                    bool newLastFileFound = false;
-                                    while (newLastFileFound == false)
-                                    {
-
-                                        
-                                        //gets journals in directory
-                                        GetJournalsInDirectory();
-                                        //gets current last log
-                                        FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
-                                        if (!logCheck.Name.Equals(lastLog.Name))
-                                        {
-                                            lastLog = logCheck;
-                                            path = lastLog.FullName;
-                                            fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                                            reader = new StreamReader(fileStream);
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            Thread.Sleep(5000);
-                                        }
-                                    }
-                                    continue;
+                                    lastLog = logCheck;
+                                    path = lastLog.FullName;
+                                    fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                                    reader = new StreamReader(fileStream);
+                                    fileChanged = true;
                                 }
-
-                            }else if(reader.EndOfStream)
-                            {
-                                addAction("Waiting for file change");
-                                checkLogChange(lastLog, path);
-                                //restarts the reading cycle
-                                continue;
+                                //else sleeps thread and restarts fileChanged cycle 5 sec later
+                                else
+                                {
+                                    lastLog = null;
+                                    Thread.Sleep(5000);
+                                }
                             }
+                            //restarts the reading cycle
+                            continue;
                         }
                     }
-                    catch (JsonReaderException e)
-                    {
+                }
+                catch (JsonReaderException e)
+                {
                             
-                    }
-                    catch (NullReferenceException e)
-                    {
-                           
-                    } 
-                
+                }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:  " + e.Message);
+                MessageBox.Show("Error:  " + e.Message + " " + e.StackTrace);
                 throw;
                 
             }finally
@@ -272,33 +266,16 @@ namespace TKC
             }
         }
         /// <summary>
-        /// Checks if log changed
+        /// Check for log change and a new log file in case shutdown event is not found in log due to error
         /// </summary>
-        /// <param name="lastLog">Last log in file info</param>
-        /// <param name="path">Last log path</param>
-        private void checkLogChange(FileInfo lastLog, string path)
+        /// <param name="lastLog">Lastlog file that app currently reads</param>
+        /// <param name="path">Path to last log file</param>
+        /// <param name="reader">Reader which reads fileSteam</param>
+        /// <param name="fileStream">FileStream in which logs text is saved</param>
+        /// <param name="line">Line on which currently reader is</param>
+        private void CheckLogChange(FileInfo lastLog, string path, StreamReader reader, FileStream fileStream, int line)
         {
-            bool fileChanged = false;
-            //last time file was changed
-            DateTime currentLastTimeWritten = DateTime.Now;
-            while (fileChanged == false)
-            {
-                lastLog = new FileInfo(path);
-                //true if file changed
-                if (lastLog.LastWriteTime > currentLastTimeWritten)
-                {
-
-                    currentLastTimeWritten = lastLog.LastWriteTime;
-                    fileChanged = true;
-
-                }
-                //else sleeps thread and restarts fileChanged cycle 5 sec later
-                else
-                {
-                    lastLog = null;
-                    Thread.Sleep(5000);
-                }
-            }
+            
         }
 
         /// <summary>
@@ -311,7 +288,6 @@ namespace TKC
             int numberOfFiles = 0;
             try
             {
-                addAction("Reading Journals directory");
                 counter.ResetThargoidKills();
                 List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -21,6 +20,8 @@ namespace TKC
 
         private void button1_Click(object sender, EventArgs e)
         {
+            InfoLabel.Text = "Reading log files. Please wait....";
+            InfoLabel.Refresh();
             reader.ReadDirectory();
             KillCounter.Text = reader.counter.PrintAllKills();
             Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
