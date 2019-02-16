@@ -17,18 +17,18 @@ namespace TKC
             KillCounter.Text = reader.counter.PrintAllKills();
             Thread readingThread1 = new Thread(reader.ReadDirectory)
             {
-                Name = "Directory Log files Reading",
+                Name = "Directory log files reading",
                 IsBackground = true
             };
-            Thread readingThread2 = new Thread(reader.ReadLastJsonFileInRealTime)
+            Thread readingThread2 = new Thread(reader.ReadLastJsonWhilePlaying)
             {
-                Name = "Real Time Reading",
+                Name = "Read while game running",
                 IsBackground = true
             };
 
-            Thread printingThread = new Thread(printKillsInIntervals)
+            Thread printingThread = new Thread(PrintKillsInIntervals)
             {
-                Name = "Printing in Intervals",
+                Name = "Printing in intervals",
                 IsBackground = true
             };
             readingThread1.Start();
@@ -38,7 +38,7 @@ namespace TKC
         /// <summary>
         /// Print kills in intervals
         /// </summary>
-        private void printKillsInIntervals()
+        private void PrintKillsInIntervals()
         {
             Boolean endOfTheCycle = true;
             while (endOfTheCycle == true)

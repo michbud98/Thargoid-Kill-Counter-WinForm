@@ -176,9 +176,9 @@ namespace TKC
         }
 
         /// <summary>
-        /// Reads last Log in real time while game is running(reads or tries to find a new file to read until user closes application)
+        /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application)
         /// </summary>
-        public void ReadLastJsonFileInRealTime()
+        public void ReadLastJsonWhilePlaying()
         {
             //integer for current line of reading
             int line = 1;
@@ -267,18 +267,6 @@ namespace TKC
                 fileStream.Close();
                 reader.Close();
             }
-        }
-        /// <summary>
-        /// Check for log change and a new log file in case shutdown event is not found in log due to error
-        /// </summary>
-        /// <param name="lastLog">Lastlog file that app currently reads</param>
-        /// <param name="path">Path to last log file</param>
-        /// <param name="reader">Reader which reads fileSteam</param>
-        /// <param name="fileStream">FileStream in which logs text is saved</param>
-        /// <param name="line">Line on which currently reader is</param>
-        private void CheckLogChange(FileInfo lastLog, string path, StreamReader reader, FileStream fileStream, int line)
-        {
-
         }
 
         /// <summary>
