@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-    
+
 
     /// <summary>
     /// Class for saving Timestamp and name of events from JSON file
@@ -131,10 +131,10 @@ namespace TKC
                 MessageBox.Show("Error:" + e.Message);
                 throw;
             }
-            
+
         }
 
-        
+
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
@@ -167,18 +167,19 @@ namespace TKC
                         continue;
                     }
                 }
-            }catch(Exception e)
-                {
-                    MessageBox.Show("Error:" + e.Message);
-                    throw;
-                }
             }
-
-            /// <summary>
-            /// Reads last Log in real time while game is running(reads or tries to find a new file to read until user closes application)
-            /// </summary>
-            public void ReadLastJsonFileInRealTime()
+            catch (Exception e)
             {
+                MessageBox.Show("Error:" + e.Message);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Reads last Log in real time while game is running(reads or tries to find a new file to read until user closes application)
+        /// </summary>
+        public void ReadLastJsonFileInRealTime()
+        {
             //integer for current line of reading
             int line = 1;
             //debug string for current JSONStringLine
@@ -187,6 +188,8 @@ namespace TKC
             StreamReader reader = null;
             try
             {
+                //gets journals in directory
+                GetJournalsInDirectory();
                 //last log which will be read in realtime
                 FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
                 //string for file path
@@ -201,14 +204,13 @@ namespace TKC
 
                         if (!reader.EndOfStream)
                         {
-                            addAction("Reading file");
                             JSONStringLine = reader.ReadLine();
                             currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                             line++;
                             DetectThargoidKill(currentEvent, JSONStringLine);
-                        }else if(reader.EndOfStream)
+                        }
+                        else if (reader.EndOfStream)
                         {
-                            addAction("Waiting for file change");
                             bool fileChanged = false;
                             //last time file was changed
                             DateTime currentLastTimeWritten = DateTime.Now;
@@ -251,15 +253,16 @@ namespace TKC
                 }
                 catch (JsonReaderException e)
                 {
-                            
+
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:  " + e.Message + " " + e.StackTrace);
+                MessageBox.Show("Error:  " + e.Message);
                 throw;
-                
-            }finally
+
+            }
+            finally
             {
                 fileStream.Close();
                 reader.Close();
@@ -275,7 +278,7 @@ namespace TKC
         /// <param name="line">Line on which currently reader is</param>
         private void CheckLogChange(FileInfo lastLog, string path, StreamReader reader, FileStream fileStream, int line)
         {
-            
+
         }
 
         /// <summary>
@@ -292,7 +295,7 @@ namespace TKC
                 List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
                 string path = "";
                 //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
-                for (int i = 0; i < journalsList.Count -1; i++)
+                for (int i = 0; i < journalsList.Count - 1; i++)
                 {
                     path = journalsList[i].FullName;
                     //Console.WriteLine("Reading: " + path);
@@ -317,7 +320,7 @@ namespace TKC
             {
                 MessageBox.Show("Error: Journals directory not found");
             }
-            
+
         }
 
         string directoryPath;
@@ -372,7 +375,7 @@ namespace TKC
             }
 
         }
-       
+
         /// <summary>
         /// Overloaded method GetJournals which gets all Journals from input
         /// </summary>
@@ -407,7 +410,7 @@ namespace TKC
             }
             catch (DirectoryNotFoundException e)
             {
-                
+
                 throw;
 
             }
@@ -424,7 +427,7 @@ namespace TKC
         /// </summary>
         /// <returns>List of Journals</returns>
         private List<FileInfo> SelectDirectory()
-        { 
+        {
             //If app cant find default ED log directory. Alerts user to select directory
             MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
@@ -436,40 +439,6 @@ namespace TKC
             {
                 return GetJournalsInDirectory("");
             }
-        }
-
-        /// <summary>
-        /// List which stores string that will be printed in InfoLabel
-        /// </summary>
-        List<string> currentAction = new List<string>();
-        /// <summary>
-        /// Controls if list changed or not
-        /// </summary>
-        public bool listChange;
-        /// <summary>
-        /// Adds action description in action list
-        /// </summary>
-        /// <param name="s">Action description in string</param>
-        private void addAction(string s)
-        {
-            if(currentAction.Contains(s))
-            {
-                int index = currentAction.IndexOf(s);
-                string tmp = currentAction[currentAction.Count - 1];
-                currentAction[currentAction.Count - 1] = s;
-                currentAction[index] = s;
-            }
-            else
-            {
-                currentAction.Add(s);
-            }
-            listChange = true;
-        }
-
-        public string getLastAction()
-        {
-            listChange = false;
-            return currentAction[currentAction.Count - 1];
         }
     }
 }

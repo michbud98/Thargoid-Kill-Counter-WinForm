@@ -14,30 +14,26 @@ namespace TKC
        
         private void Form1_Load(object sender, EventArgs e)
         {
-            
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            InfoLabel.Text = "Reading log files. Please wait....";
-            InfoLabel.Refresh();
-            reader.ReadDirectory();
             KillCounter.Text = reader.counter.PrintAllKills();
-            Thread readingThread = new Thread(reader.ReadLastJsonFileInRealTime)
-             {
-                 Name = "Real Time Reading",
-                 IsBackground = true
-             };
+            Thread readingThread1 = new Thread(reader.ReadDirectory)
+            {
+                Name = "Directory Log files Reading",
+                IsBackground = true
+            };
+            Thread readingThread2 = new Thread(reader.ReadLastJsonFileInRealTime)
+            {
+                Name = "Real Time Reading",
+                IsBackground = true
+            };
 
-             Thread printingThread = new Thread(printKillsInIntervals)
-             {
-                 Name = "Printing in Intervals",
-                 IsBackground = true
-             };
-             readingThread.Start();
-             printingThread.Start();
-
+            Thread printingThread = new Thread(printKillsInIntervals)
+            {
+                Name = "Printing in Intervals",
+                IsBackground = true
+            };
+            readingThread1.Start();
+            readingThread2.Start();
+            printingThread.Start();
         }
         /// <summary>
         /// Print kills in intervals
@@ -51,10 +47,6 @@ namespace TKC
                 if (reader.counter.CheckKillChange() == true)
                 {
                     KillCounterSetText(reader.counter.PrintAllKills());
-                }
-                else if(reader.listChange == true)
-                {
-                    InfoLabelSetText(reader.getLastAction());
                 }
                 else
                 {
@@ -86,21 +78,6 @@ namespace TKC
             else
             {
                 this.KillCounter.Text = text;
-            }
-        }
-        public void InfoLabelSetText(string text)
-        {
-            // InvokeRequired required compares the thread ID of the
-            // calling thread to the thread ID of the creating thread.
-            // If these threads are different, it returns true.
-            if (this.InfoLabel.InvokeRequired)
-            {
-                StringArgReturningVoidDelegate d = new StringArgReturningVoidDelegate(InfoLabelSetText);
-                this.Invoke(d, new object[] { text });
-            }
-            else
-            {
-                this.InfoLabel.Text = text;
             }
         }
     }

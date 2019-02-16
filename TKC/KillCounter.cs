@@ -51,8 +51,8 @@ namespace TKC
         /// <returns>String of thargoid kills</returns>
         internal string PrintAllKills()
         {
-            return "Kills from all Journals:" + "\r\n" + "Scouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " +
-                medusa + "\r\nHydra: " + hydra + "\r\nUnknown " + unknown + "\r\nTotal " + allTypesKills;
+            return "Thargoid Combat Kills\r\n" + "------------------------" + "\r\nScouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " +
+              medusa + "\r\nHydra: " + hydra  + "\r\nUnknown: " + unknown + "\r\n------------------------" + "\r\nTotal: " + allTypesKills;
         }
 
         /// <summary>
