@@ -14,27 +14,38 @@ namespace TKC
        
         private void Form1_Load(object sender, EventArgs e)
         {
-            KillCounter.Text = reader.counter.PrintAllKills();
-            Thread readingThread1 = new Thread(reader.ReadDirectory)
-            {
-                Name = "Directory log files reading",
-                IsBackground = true
-            };
-            Thread readingThread2 = new Thread(reader.ReadLastJsonWhilePlaying)
-            {
-                Name = "Read while game running",
-                IsBackground = true
-            };
-
+            KillCounter.Text = "Scanning log files";
             Thread printingThread = new Thread(PrintKillsInIntervals)
             {
                 Name = "Printing in intervals",
                 IsBackground = true
             };
-            readingThread1.Start();
-            readingThread2.Start();
+            Thread directoryReaderThread = new Thread(() => StartReadingFromDirectory(reader, printingThread))
+            {
+                Name = "Directory log files reading",
+                IsBackground = true
+            };
+            Thread realTimeReaderThread = new Thread(reader.ReadLastJsonWhilePlaying)
+            {
+                Name = "Read while game running",
+                IsBackground = true
+            };
+
+            directoryReaderThread.Start();
+            realTimeReaderThread.Start();
+            
+        }
+
+        /// <summary>
+        /// Starts reading log iles from directory and when finished starts printing on screen
+        /// </summary>
+        private void StartReadingFromDirectory(JSONReaderSingleton reader, Thread printingThread)
+        {
+            
+            reader.ReadDirectory();
             printingThread.Start();
         }
+
         /// <summary>
         /// Print kills in intervals
         /// </summary>
@@ -47,6 +58,7 @@ namespace TKC
                 if (reader.counter.CheckKillChange() == true)
                 {
                     KillCounterSetText(reader.counter.PrintAllKills());
+
                 }
                 else
                 {
