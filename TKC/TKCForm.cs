@@ -15,35 +15,37 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             KillCounter.Text = "Scanning log files";
-            Thread printingThread = new Thread(PrintKillsInIntervals)
+            Thread directoryReaderThread = new Thread(() => Startup(reader))
             {
-                Name = "Printing in intervals",
+                Name = "DirectoryReader",
                 IsBackground = true
             };
-            Thread directoryReaderThread = new Thread(() => StartReadingFromDirectory(reader, printingThread))
-            {
-                Name = "Directory log files reading",
-                IsBackground = true
-            };
-            Thread realTimeReaderThread = new Thread(reader.ReadLastJsonWhilePlaying)
-            {
-                Name = "Read while game running",
-                IsBackground = true
-            };
-
             directoryReaderThread.Start();
-            realTimeReaderThread.Start();
-            
         }
 
         /// <summary>
-        /// Starts reading log iles from directory and when finished starts printing on screen
+        /// Begins reading log files and starts printing thread and realtime reading thread when finished
         /// </summary>
-        private void StartReadingFromDirectory(JSONReaderSingleton reader, Thread printingThread)
+        /// <param name="reader"></param>
+        private void Startup(JSONReaderSingleton reader)
         {
-            
             reader.ReadDirectory();
+            KillCounter.Text = "Scanning log files";
+            Thread printingThread = new Thread(PrintKillsInIntervals)
+            {
+                Name = "Printer",
+                IsBackground = true
+            };
+
+            Thread realTimeReaderThread = new Thread(reader.ReadLastJsonWhilePlaying)
+            {
+                Name = "RealTimeR",
+                IsBackground = true
+            };
+
+            realTimeReaderThread.Start();
             printingThread.Start();
+            
         }
 
         /// <summary>
