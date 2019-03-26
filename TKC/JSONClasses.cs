@@ -10,46 +10,6 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-
-
-    /// <summary>
-    /// Class for saving Timestamp and name of events from JSON file
-    /// </summary>
-    internal class EDEvent
-    {
-
-        public DateTime timestamp { get; set; }
-        public string @event { get; set; }
-
-        public override string ToString()
-        {
-            return string.Format(" Timestamp {0} Event: {1} ", timestamp, @event);
-        }
-
-
-    }
-
-    /// <summary>
-    /// Inherited Class from EDEvent which saves data about thargoid kills
-    /// </summary>
-    internal class ThargoidKillEvent : EDEvent
-    {
-        /// <summary>
-        /// Reward -- in Credits, tels us which thargoid we killed 10 k Scout, 2 mil Cyclops, 6 mil Basillisk, 10 mil Medusa, 15 mil Hydra
-        /// </summary>
-        public int reward { get; set; }
-        public string awardingFaction_Localised { get; set; }
-        public string victimFaction_Localised { get; set; }
-
-        public override string ToString()
-        {
-            return string.Format(" Timestamp: {0} Event: {1} reward: {2} awardingFaction: {3} victimFaction: {4}",
-                timestamp, @event, reward, awardingFaction_Localised, victimFaction_Localised);
-        }
-    }
-
-
-
     /// <summary>
     /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
@@ -64,9 +24,8 @@ namespace TKC
         /// JSONReaderSingleton constructor
         /// </summary>
         /// <returns>Single class of JSONReaders</returns>
-        public static JSONReaderSingleton getInstance()
+        public static JSONReaderSingleton GetInstance()
         {
-
             if (JSONReaderInstance == null)
             {
                 JSONReaderInstance = new JSONReaderSingleton();
@@ -83,11 +42,9 @@ namespace TKC
         {
             try
             {
-
                 ThargoidKillEvent kill;
                 if (e1.@event.Equals("FactionKillBond"))
                 {
-
                     kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
                         new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                     if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
@@ -121,6 +78,7 @@ namespace TKC
                                 break;
                             default:
                                 counter.unknown++;
+                                //log unknown type of thargoid
                                 break;
                         }
                     }
@@ -128,13 +86,12 @@ namespace TKC
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:" + e.Message);
+                MessageBox.Show($"Error: {e.Message}");
                 throw;
             }
 
         }
-
-
+        
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
@@ -164,13 +121,14 @@ namespace TKC
                     }
                     catch (JsonReaderException e)
                     {
+                        //error log
                         continue;
                     }
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:" + e.Message);
+                MessageBox.Show($"Error: {e.Message}");
                 throw;
             }
         }
@@ -189,7 +147,7 @@ namespace TKC
             try
             {
                 //gets journals in directory
-                GetJournalsInDirectory();
+                List<FileInfo> sortedJournalsList = GetJournalsInDirectory();
                 //last log which will be read in realtime
                 FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
                 //string for file path
@@ -199,9 +157,9 @@ namespace TKC
                 {
                     fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     reader = new StreamReader(fileStream);
-                    while (true)
+                    do
                     {
-
+                        //if reader is not at the end of log file readline
                         if (!reader.EndOfStream)
                         {
                             JSONStringLine = reader.ReadLine();
@@ -209,27 +167,27 @@ namespace TKC
                             line++;
                             DetectThargoidKill(currentEvent, JSONStringLine);
                         }
+                        //reader is at the end of the line checks if file changed
                         else if (reader.EndOfStream)
                         {
                             bool fileChanged = false;
                             //last time file was changed
                             DateTime currentLastTimeWritten = DateTime.Now;
-                            while (fileChanged == false)
+                            do
                             {
                                 lastLog = new FileInfo(path);
                                 //gets journals in directory
-                                GetJournalsInDirectory();
+                                sortedJournalsList = GetJournalsInDirectory();
                                 //gets current last log
                                 FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
+                                
                                 //true if file changed
                                 if (lastLog.LastWriteTime > currentLastTimeWritten)
                                 {
-
                                     currentLastTimeWritten = lastLog.LastWriteTime;
                                     fileChanged = true;
-
                                 }
-                                //True if at the end of file and there is a log file with information
+                                //True if at the end of file and directory has a newer log file
                                 else if (reader.EndOfStream && !logCheck.Name.Equals(lastLog.Name))
                                 {
                                     line = 1;
@@ -245,20 +203,20 @@ namespace TKC
                                     lastLog = null;
                                     Thread.Sleep(5000);
                                 }
-                            }
+                            } while (fileChanged == false);
                             //restarts the reading cycle
                             continue;
                         }
-                    }
+                    } while (true);
                 }
                 catch (JsonReaderException e)
                 {
-
+                    //error log
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:  " + e.Message);
+                MessageBox.Show($"Error: {e.Message}");
                 throw;
 
             }
@@ -311,15 +269,16 @@ namespace TKC
 
         }
 
-        string directoryPath;
+        //string directoryPath;
         //List of sorted Journals
-        List<FileInfo> sortedJournalsList = null;
+        //List<FileInfo> sortedJournalsList = null;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
         /// </summary>
         /// <returns>List of Journals </returns>
         private List<FileInfo> GetJournalsInDirectory()
         {
+            string directoryPath;
             try
             {
                 //finds path to Users folder ("C:\Users\<user>)"
@@ -335,7 +294,7 @@ namespace TKC
                 FileInfo[] unsortedJournals = directory.GetFiles("*.log");
                 //List for sorted ED Journal files from directory
                 //List<FileInfo>
-                sortedJournalsList = new List<FileInfo>();
+                List<FileInfo> sortedJournalsList = new List<FileInfo>();
 
                 //matches filenames with regex and sorts ED Journal files from others
                 int index = 0;
@@ -353,12 +312,12 @@ namespace TKC
             }
             catch (DirectoryNotFoundException e)
             {
+                //error log
                 return SelectDirectory();
-
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:  " + e.Message);
+                MessageBox.Show($"Error: {e.Message}");
                 throw;
             }
 
@@ -398,13 +357,13 @@ namespace TKC
             }
             catch (DirectoryNotFoundException e)
             {
-
+                //error log
                 throw;
 
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error:  " + e.Message);
+                MessageBox.Show($"Error: {e.Message}");
                 throw;
             }
 

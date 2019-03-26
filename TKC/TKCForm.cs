@@ -10,7 +10,7 @@ namespace TKC
         {
             InitializeComponent();
         }
-        JSONReaderSingleton reader = JSONReaderSingleton.getInstance();
+        JSONReaderSingleton reader = JSONReaderSingleton.GetInstance();
        
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -26,7 +26,7 @@ namespace TKC
         /// <summary>
         /// Begins reading log files and starts printing thread and realtime reading thread when finished
         /// </summary>
-        /// <param name="reader"></param>
+        /// <param name="reader">JSON reader instance</param>
         private void Startup(JSONReaderSingleton reader)
         {
             reader.ReadDirectory();
