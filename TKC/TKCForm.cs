@@ -15,19 +15,38 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             KillCounter.Text = "Scanning log files";
-            Thread directoryReaderThread = new Thread(() => Startup(reader))
+            try
+            {
+                reader.ReadDirectory();
+            }catch(Exception ex)
+            {
+                //error logging
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+                Application.Exit();
+            }
+            
+            
+            Thread printingThread = new Thread(PrintKillsInIntervals)
+            {
+                Name = "Printer",
+                IsBackground = true
+            };
+            printingThread.Start();
+
+            /*Thread directoryReaderThread = new Thread(() => Startup(reader))
             {
                 Name = "DirectoryReader",
                 IsBackground = true
             };
-            directoryReaderThread.Start();
+            directoryReaderThread.Start();*/
         }
 
         /// <summary>
         /// Begins reading log files and starts printing thread and realtime reading thread when finished
         /// </summary>
         /// <param name="reader">JSON reader instance</param>
-        private void Startup(JSONReaderSingleton reader)
+        /*private void Startup(JSONReaderSingleton reader)
         {
             reader.ReadDirectory();
             KillCounter.Text = "Scanning log files";
@@ -46,7 +65,7 @@ namespace TKC
             realTimeReaderThread.Start();
             printingThread.Start();
             
-        }
+        }*/
 
         /// <summary>
         /// Print kills in intervals

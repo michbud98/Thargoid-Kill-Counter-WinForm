@@ -40,56 +40,47 @@ namespace TKC
         /// <param name="JSONStringLine"> JSON text </param>
         private void DetectThargoidKill(EDEvent e1, string JSONStringLine)
         {
-            try
+            ThargoidKillEvent kill;
+            if (e1.@event.Equals("FactionKillBond"))
             {
-                ThargoidKillEvent kill;
-                if (e1.@event.Equals("FactionKillBond"))
+                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
+                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
                 {
-                    kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
-                        new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                    if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
+                    //error Log
+                }
+                else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
+                {
+                    int caseSwitch = kill.reward;
+                    switch (caseSwitch)
                     {
-                        //error Log
-                    }
-                    else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
-                    {
-                        int caseSwitch = kill.reward;
-                        switch (caseSwitch)
-                        {
-                            case 10000:
-                                counter.scout++;
-                                counter.allTypesKills++;
-                                break;
-                            case 2000000:
-                                counter.cyclops++;
-                                counter.allTypesKills++;
-                                break;
-                            case 6000000:
-                                counter.basillisk++;
-                                counter.allTypesKills++;
-                                break;
-                            case 10000000:
-                                counter.medusa++;
-                                counter.allTypesKills++;
-                                break;
-                            case 15000000:
-                                counter.hydra++;
-                                counter.allTypesKills++;
-                                break;
-                            default:
-                                counter.unknown++;
-                                //log unknown type of thargoid
-                                break;
-                        }
+                        case 10000:
+                            counter.scout++;
+                            counter.allTypesKills++;
+                            break;
+                        case 2000000:
+                            counter.cyclops++;
+                            counter.allTypesKills++;
+                            break;
+                        case 6000000:
+                            counter.basillisk++;
+                            counter.allTypesKills++;
+                            break;
+                        case 10000000:
+                            counter.medusa++;
+                            counter.allTypesKills++;
+                            break;
+                        case 15000000:
+                            counter.hydra++;
+                            counter.allTypesKills++;
+                            break;
+                        default:
+                            counter.unknown++;
+                            //log unknown type of thargoid
+                            break;
                     }
                 }
             }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Error: {e.Message}");
-                throw;
-            }
-
         }
         
         /// <summary>
@@ -98,14 +89,14 @@ namespace TKC
         /// <param name="filePath"> - a path to a file</param>
         private void ReadJsonFile(string filePath)
         {
+            //integer for current line of reading
+            int line = 1;
+            //debug string for current JSONStringLine
+            string JSONStringLine = "";
+            FileStream fileStream = null;
+            StreamReader reader = null;
             try
             {
-                //integer for current line of reading
-                int line = 1;
-                //debug string for current JSONStringLine
-                string JSONStringLine = "";
-                FileStream fileStream = null;
-                StreamReader reader = null;
                 fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 reader = new StreamReader(fileStream);
                 EDEvent currentEvent = null;
@@ -126,15 +117,26 @@ namespace TKC
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                MessageBox.Show($"Error: {e.Message}");
                 throw;
+            }
+            finally
+            {
+                //closes stream and reader in case of some unknown error
+                if(fileStream != null)
+                {
+                    fileStream.Close();
+                }
+                if(reader != null)
+                {
+                    reader.Close();
+                }
             }
         }
 
         /// <summary>
-        /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application)
+        /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application) REQUIRES another thread
         /// </summary>
         public void ReadLastJsonWhilePlaying()
         {
@@ -214,11 +216,9 @@ namespace TKC
                     //error log
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                MessageBox.Show($"Error: {e.Message}");
                 throw;
-
             }
             finally
             {
@@ -232,41 +232,33 @@ namespace TKC
         /// </summary>
         public void ReadDirectory()
         {
-            const int numberOfRetries = 20;
-            const int delay = 3000;
+            const int NUMBER_OF_RETRIES = 20;
+            const int DELAY = 3000;
             int numberOfFiles = 0;
-            try
+            counter.ResetThargoidKills();
+            List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
+            string path = "";
+            //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
+            for (int i = 0; i < journalsList.Count - 1; i++)
             {
-                counter.ResetThargoidKills();
-                List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
-                string path = "";
-                //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)
-                for (int i = 0; i < journalsList.Count - 1; i++)
+                path = journalsList[i].FullName;
+                //Console.WriteLine("Reading: " + path);
+                for (int j = 0; j <= NUMBER_OF_RETRIES; ++j)
                 {
-                    path = journalsList[i].FullName;
-                    //Console.WriteLine("Reading: " + path);
-                    for (int j = 0; j <= numberOfRetries; ++j)
+                    try
                     {
-                        try
-                        {
-                            JSONReaderInstance.ReadJsonFile(path);
-                            numberOfFiles++;
-                            break;
-                        }
-                        catch (IOException) when (j <= numberOfRetries)
-                        {
-                            System.Threading.Thread.Sleep(delay);
-                        }
+                        JSONReaderInstance.ReadJsonFile(path);
+                        numberOfFiles++;
+                        break;
+                    }
+                    catch (IOException) when (j <= NUMBER_OF_RETRIES)
+                    {
+                        System.Threading.Thread.Sleep(DELAY);
                     }
                 }
-                //Initiates garbage collection at the end
-                GC.Collect();
             }
-            catch (DirectoryNotFoundException)
-            {
-                MessageBox.Show("Error: Journals directory not found");
-            }
-
+            //Initiates garbage collection at the end
+            GC.Collect();
         }
 
         //string directoryPath;
@@ -279,93 +271,47 @@ namespace TKC
         private List<FileInfo> GetJournalsInDirectory()
         {
             string directoryPath;
+            
+            //finds path to Users folder ("C:\Users\<user>)"
+            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                directoryPath = Directory.GetParent(directoryPath).ToString();
+            }
+            //regex that matches ED journals names
+            Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
+            DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerou");
+            FileInfo[] unsortedJournals = null;
             try
             {
-                //finds path to Users folder ("C:\Users\<user>)"
-                directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-                if (Environment.OSVersion.Version.Major >= 6)
-                {
-                    directoryPath = Directory.GetParent(directoryPath).ToString();
-                }
-                //regex that matches ED journals names
-                Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
-                DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
                 //field of unsorted files from directory above
-                FileInfo[] unsortedJournals = directory.GetFiles("*.log");
-                //List for sorted ED Journal files from directory
-                //List<FileInfo>
-                List<FileInfo> sortedJournalsList = new List<FileInfo>();
+                unsortedJournals = directory.GetFiles("*.log");
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                //error logging
+                //If app cant find default ED log directory. Alerts user to select directory
+                MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+                directory = new DirectoryInfo(SelectDirectory());
+                unsortedJournals = directory.GetFiles("*.log");
+            }
+            
+            //List for sorted ED Journal files from directory
+            //List<FileInfo>
+            List<FileInfo> sortedJournalsList = new List<FileInfo>();
 
-                //matches filenames with regex and sorts ED Journal files from others
-                int index = 0;
-                while (index < unsortedJournals.Length)
+            //matches filenames with regex and sorts ED Journal files from others
+            for (int i = 0; i < unsortedJournals.Length; i++)
+            {
+                if (regex.IsMatch(unsortedJournals[i].Name))
                 {
-                    if (regex.IsMatch(unsortedJournals[index].Name))
-                    {
-                        sortedJournalsList.Add(unsortedJournals[index]);
-                    }
-                    index++;
+                    sortedJournalsList.Add(unsortedJournals[i]);
                 }
-                //Orders list by Last time it was written into (descending)
-                sortedJournalsList = sortedJournalsList.OrderBy(x => x.LastWriteTime).ToList();
-                return sortedJournalsList;
             }
-            catch (DirectoryNotFoundException e)
-            {
-                //error log
-                return SelectDirectory();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Error: {e.Message}");
-                throw;
-            }
-
-        }
-
-        /// <summary>
-        /// Overloaded method GetJournals which gets all Journals from input
-        /// </summary>
-        /// <param name="directoryPathInput"> - directory path </param>
-        /// <returns>List of Journals</returns>
-        private List<FileInfo> GetJournalsInDirectory(string directoryPathInput)
-        {
-            try
-            {
-                //regex that matches ED journals names
-                Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
-                DirectoryInfo directory = new DirectoryInfo(directoryPathInput);
-                //field of unsorted files from directory above
-                FileInfo[] unsortedFiles = directory.GetFiles("*.log");
-                //List for sorted ED log files from directory
-                List<FileInfo> sortedFilesList = new List<FileInfo>();
-
-                //matches filenames with regex and sorts ED log files from others
-                int index = 0;
-                while (index < unsortedFiles.Length)
-                {
-                    if (regex.IsMatch(unsortedFiles[index].Name))
-                    {
-                        sortedFilesList.Add(unsortedFiles[index]);
-                        //Console.WriteLine(unsortedFiles[index].Name);
-                    }
-                    index++;
-                }
-                //Orders list by Last time it was written into (descending)
-                sortedFilesList = sortedFilesList.OrderBy(x => x.LastWriteTime).ToList();
-                return sortedFilesList;
-            }
-            catch (DirectoryNotFoundException e)
-            {
-                //error log
-                throw;
-
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Error: {e.Message}");
-                throw;
-            }
+            //Orders list by Last time it was written into (descending)
+            sortedJournalsList = sortedJournalsList.OrderBy(x => x.LastWriteTime).ToList();
+            return sortedJournalsList;
+            
 
         }
 
@@ -373,18 +319,17 @@ namespace TKC
         /// Shows folder browser to user which selects ED journals directory
         /// </summary>
         /// <returns>List of Journals</returns>
-        private List<FileInfo> SelectDirectory()
+        private string SelectDirectory()
         {
-            //If app cant find default ED log directory. Alerts user to select directory
-            MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
-                return GetJournalsInDirectory(folderBrowserDialog1.SelectedPath);
+                return folderBrowserDialog1.SelectedPath;
             }
             else
             {
-                return GetJournalsInDirectory("");
+                //TODO do something in case this happens
+                throw new Exception("User didn't selected directory.");
             }
         }
     }
