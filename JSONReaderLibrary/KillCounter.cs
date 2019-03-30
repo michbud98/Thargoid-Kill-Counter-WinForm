@@ -49,7 +49,7 @@ namespace TKC
         /// Prints thargoid kills to text
         /// </summary>
         /// <returns>String of thargoid kills</returns>
-        internal string PrintAllKills()
+        public string PrintAllKills()
         {
             /*"Thargoid Combat Kills\r\n" + "------------------------" + "\r\nScouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " +
               medusa + "\r\nHydra: " + hydra + "\r\nUnknown: " + unknown + "\r\n------------------------" + "\r\nTotal: " + allTypesKills;*/
@@ -61,7 +61,7 @@ namespace TKC
         /// Checks if kill count changed
         /// </summary>
         /// <returns>bool true or false</returns>
-        internal bool CheckKillChange()
+        public bool CheckKillChange()
         {
 
             if (allTypesKills > lastAllTypesKills)

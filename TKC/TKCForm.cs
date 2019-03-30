@@ -16,16 +16,17 @@ namespace TKC
        
         private void Form1_Load(object sender, EventArgs e)
         {
+            
             string directoryPath;
-            //finds path to Users folder ("C:\Users\<user>)"
+            //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals TODO add this to CONFIG 
             directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 directoryPath = Directory.GetParent(directoryPath).ToString();
             }
-            reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerou");
+            reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
 
-            KillCounter.Text = "Scanning log files";
+            KillCounter.Text = "Click on button to scan files";
             
             Thread printingThread = new Thread(PrintKillsInIntervals)
             {
@@ -36,6 +37,12 @@ namespace TKC
 
             
         }
+        private void button1_Click(object sender, EventArgs e)
+        {
+            reader.ReadDirectory();
+            //reader.ReadLastJsonWhilePlaying();
+        }
+
         /// <summary>
         /// Print kills in intervals
         /// </summary>
@@ -83,10 +90,6 @@ namespace TKC
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            reader.ReadDirectory();
-            //reader.ReadLastJsonWhilePlaying();
-        }
+        
     }
 }

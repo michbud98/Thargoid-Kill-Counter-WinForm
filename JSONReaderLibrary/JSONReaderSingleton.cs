@@ -334,6 +334,7 @@ namespace TKC
         /// Shows folder browser to user which selects ED journals directory
         /// </summary>
         /// <returns>List of Journals</returns>
+        /// <exception cref="Exception">User didn't selected directory.</exception>
         private string SelectDirectory()
         {
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
