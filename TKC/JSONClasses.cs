@@ -17,18 +17,25 @@ namespace TKC
     {
 
         public KillCounter counter = new KillCounter();
+        private string JournalsDirPath;
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
+
+        public JSONReaderSingleton(string JournalsDirPath)
+        {
+            this.JournalsDirPath = JournalsDirPath;
+        }
+
         /// <summary>
         /// JSONReaderSingleton constructor
         /// </summary>
         /// <returns>Single class of JSONReaders</returns>
-        public static JSONReaderSingleton GetInstance()
+        public static JSONReaderSingleton GetInstance(string JournalsDirPath)
         {
             if (JSONReaderInstance == null)
             {
-                JSONReaderInstance = new JSONReaderSingleton();
+                JSONReaderInstance = new JSONReaderSingleton(JournalsDirPath);
             }
 
             return JSONReaderInstance;
@@ -270,17 +277,9 @@ namespace TKC
         /// <returns>List of Journals </returns>
         private List<FileInfo> GetJournalsInDirectory()
         {
-            string directoryPath;
-            
-            //finds path to Users folder ("C:\Users\<user>)"
-            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
-                directoryPath = Directory.GetParent(directoryPath).ToString();
-            }
             //regex that matches ED journals names
             Regex regex = new Regex(@"(Journal)\.(\d{12})\.(\d{2})\.log"); //matches with Journal.123456789109.01.log
-            DirectoryInfo directory = new DirectoryInfo(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerou");
+            DirectoryInfo directory = new DirectoryInfo(JournalsDirPath);//directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerou"
             FileInfo[] unsortedJournals = null;
             try
             {
@@ -292,10 +291,26 @@ namespace TKC
                 //error logging
                 //If app cant find default ED log directory. Alerts user to select directory
                 MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
-                directory = new DirectoryInfo(SelectDirectory());
-                unsortedJournals = directory.GetFiles("*.log");
+                JournalsDirPath = SelectDirectory();
+                do
+                {
+                    directory = new DirectoryInfo(JournalsDirPath);
+                    unsortedJournals = directory.GetFiles("*.log");
+                    //check if field contains something if not user probably selected wrong directory
+                    //asks user for new dir
+                    if (unsortedJournals.Length == 0)
+                    {
+                        MessageBox.Show("Error: Directory has no log files. Select directory with log files.");
+                        JournalsDirPath = SelectDirectory();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                } while (true);
+                
+
             }
-            
             //List for sorted ED Journal files from directory
             //List<FileInfo>
             List<FileInfo> sortedJournalsList = new List<FileInfo>();

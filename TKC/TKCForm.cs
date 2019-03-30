@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -10,63 +11,31 @@ namespace TKC
         {
             InitializeComponent();
         }
-        JSONReaderSingleton reader = JSONReaderSingleton.GetInstance();
+
+        JSONReaderSingleton reader;
        
         private void Form1_Load(object sender, EventArgs e)
         {
-            KillCounter.Text = "Scanning log files";
-            try
+            string directoryPath;
+            //finds path to Users folder ("C:\Users\<user>)"
+            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+            if (Environment.OSVersion.Version.Major >= 6)
             {
-                reader.ReadDirectory();
-            }catch(Exception ex)
-            {
-                //error logging
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
-                Application.Exit();
+                directoryPath = Directory.GetParent(directoryPath).ToString();
             }
-            
-            
-            Thread printingThread = new Thread(PrintKillsInIntervals)
-            {
-                Name = "Printer",
-                IsBackground = true
-            };
-            printingThread.Start();
+            reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerou");
 
-            /*Thread directoryReaderThread = new Thread(() => Startup(reader))
-            {
-                Name = "DirectoryReader",
-                IsBackground = true
-            };
-            directoryReaderThread.Start();*/
-        }
-
-        /// <summary>
-        /// Begins reading log files and starts printing thread and realtime reading thread when finished
-        /// </summary>
-        /// <param name="reader">JSON reader instance</param>
-        /*private void Startup(JSONReaderSingleton reader)
-        {
-            reader.ReadDirectory();
             KillCounter.Text = "Scanning log files";
+            
             Thread printingThread = new Thread(PrintKillsInIntervals)
             {
                 Name = "Printer",
                 IsBackground = true
             };
-
-            Thread realTimeReaderThread = new Thread(reader.ReadLastJsonWhilePlaying)
-            {
-                Name = "RealTimeR",
-                IsBackground = true
-            };
-
-            realTimeReaderThread.Start();
             printingThread.Start();
-            
-        }*/
 
+            
+        }
         /// <summary>
         /// Print kills in intervals
         /// </summary>
@@ -112,6 +81,12 @@ namespace TKC
             {
                 this.KillCounter.Text = text;
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            reader.ReadDirectory();
+            //reader.ReadLastJsonWhilePlaying();
         }
     }
 }
