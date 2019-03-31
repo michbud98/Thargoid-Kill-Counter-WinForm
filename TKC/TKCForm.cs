@@ -7,11 +7,12 @@ namespace TKC
 {
     public partial class TKCForm : Form
     {
+
         public TKCForm()
         {
             InitializeComponent();
         }
-
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         JSONReaderSingleton reader;
        
         private void Form1_Load(object sender, EventArgs e)
@@ -39,7 +40,16 @@ namespace TKC
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            reader.ReadDirectory();
+            try
+            {
+                reader.ReadDirectory();
+            }
+            catch(Exception ex)
+            {
+                log.Debug("TEST");
+                //TODO error Logging
+            }
+            
             //reader.ReadLastJsonWhilePlaying();
         }
 

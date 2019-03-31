@@ -15,6 +15,8 @@ namespace TKC
     /// </summary>
     public class JSONReaderSingleton
     {
+        //Error Logger
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public KillCounter counter = new KillCounter();
         private string JournalsDirPath;
@@ -22,7 +24,7 @@ namespace TKC
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
 
-        public JSONReaderSingleton(string JournalsDirPath)
+        private JSONReaderSingleton(string JournalsDirPath)
         {
             this.JournalsDirPath = JournalsDirPath;
         }
@@ -54,7 +56,7 @@ namespace TKC
                     new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                 if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
                 {
-                    //error Log
+                    //TODO error logging
                 }
                 else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
                 {
@@ -83,7 +85,7 @@ namespace TKC
                             break;
                         default:
                             counter.unknown++;
-                            //log unknown type of thargoid
+                            //TODO log unknown type of thargoid
                             break;
                     }
                 }
@@ -117,9 +119,10 @@ namespace TKC
                         line++;
                         DetectThargoidKill(currentEvent, JSONStringLine);
                     }
-                    catch (JsonReaderException e)
+                    catch (JsonReaderException ex)
                     {
-                        //error log
+                        log.Debug(ex.Message);
+                        //TODO error logging
                         continue;
                     }
                 }
@@ -145,6 +148,7 @@ namespace TKC
         /// <summary>
         /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application) REQUIRES another thread
         /// </summary>
+        /// 
         public void ReadLastJsonWhilePlaying()
         {
             //integer for current line of reading
@@ -218,9 +222,9 @@ namespace TKC
                         }
                     } while (true);
                 }
-                catch (JsonReaderException e)
+                catch (JsonReaderException ex)
                 {
-                    //error log
+                    //TODO error logging
                 }
             }
             catch (Exception)
@@ -229,14 +233,22 @@ namespace TKC
             }
             finally
             {
-                fileStream.Close();
-                reader.Close();
+                //closes stream and reader in case of some unknown error
+                if (fileStream != null)
+                {
+                    fileStream.Close();
+                }
+                if (reader != null)
+                {
+                    reader.Close();
+                }
             }
         }
 
         /// <summary>
         /// Reads all Journal files in selected directory
         /// </summary>
+        /// <exception cref="IOException">Reader cant access file after 2O tries.</exception>
         public void ReadDirectory()
         {
             const int NUMBER_OF_RETRIES = 20;
@@ -288,7 +300,7 @@ namespace TKC
             }
             catch (DirectoryNotFoundException ex)
             {
-                //error logging
+                log.Debug(ex.Message);
                 //If app cant find default ED log directory. Alerts user to select directory
                 MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
                 JournalsDirPath = SelectDirectory();
@@ -344,6 +356,7 @@ namespace TKC
             }
             else
             {
+                log.Debug("User didn't selected directory.");
                 //TODO do something in case this happens
                 throw new Exception("User didn't selected directory.");
             }
