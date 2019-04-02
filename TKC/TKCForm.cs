@@ -44,10 +44,17 @@ namespace TKC
             {
                 reader.ReadDirectory();
             }
-            catch(Exception ex)
+            catch (ArgumentException ex)
             {
-                log.Debug("TEST");
+                log.Error("User didn't selected directory", ex);
+                MessageBox.Show("User didn't selected directory. Application will now close.");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                log.Fatal("Unknown error", ex);
                 //TODO error Logging
+                throw;
             }
             
             //reader.ReadLastJsonWhilePlaying();

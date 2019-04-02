@@ -13,6 +13,7 @@ namespace TKC
     /// <summary>
     /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
+    /// <exception cref="ArgumentException">User didn't selected directory.</exception>
     public class JSONReaderSingleton
     {
         //Error Logger
@@ -52,11 +53,10 @@ namespace TKC
             ThargoidKillEvent kill;
             if (e1.@event.Equals("FactionKillBond"))
             {
-                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,
-                    new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                 if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
                 {
-                    //TODO error logging
+                    log.Debug($"Faulty line passed to DetectThargoidKill. AwardingFaction and VictimFaction are null\r\n Text of line - {JSONStringLine}");
                 }
                 else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
                 {
@@ -85,7 +85,7 @@ namespace TKC
                             break;
                         default:
                             counter.unknown++;
-                            //TODO log unknown type of thargoid
+                            log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
                             break;
                     }
                 }
@@ -98,8 +98,6 @@ namespace TKC
         /// <param name="filePath"> - a path to a file</param>
         private void ReadJsonFile(string filePath)
         {
-            //integer for current line of reading
-            int line = 1;
             //debug string for current JSONStringLine
             string JSONStringLine = "";
             FileStream fileStream = null;
@@ -116,19 +114,18 @@ namespace TKC
                     {
                         JSONStringLine = reader.ReadLine();
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        line++;
                         DetectThargoidKill(currentEvent, JSONStringLine);
                     }
                     catch (JsonReaderException ex)
                     {
-                        log.Debug(ex.Message);
-                        //TODO error logging
+                        log.Debug("JSONReader exception occured", ex);
                         continue;
                     }
                 }
             }
             catch (Exception)
             {
+                log.Error($"Unknown error while reading file {filePath}");
                 throw;
             }
             finally
@@ -248,12 +245,10 @@ namespace TKC
         /// <summary>
         /// Reads all Journal files in selected directory
         /// </summary>
-        /// <exception cref="IOException">Reader cant access file after 2O tries.</exception>
         public void ReadDirectory()
         {
-            const int NUMBER_OF_RETRIES = 20;
-            const int DELAY = 3000;
-            int numberOfFiles = 0;
+            const int NUMBER_OF_RETRIES = 1;
+            const int DELAY = 10;
             counter.ResetThargoidKills();
             List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
             string path = "";
@@ -267,12 +262,15 @@ namespace TKC
                     try
                     {
                         JSONReaderInstance.ReadJsonFile(path);
-                        numberOfFiles++;
                         break;
                     }
-                    catch (IOException) when (j <= NUMBER_OF_RETRIES)
+                    catch (IOException) when (j < NUMBER_OF_RETRIES)
                     {
                         System.Threading.Thread.Sleep(DELAY);
+                    }
+                    catch (IOException ex)
+                    {
+                        log.Info($"Cant access file: {path}", ex);
                     }
                 }
             }
@@ -304,6 +302,7 @@ namespace TKC
                 //If app cant find default ED log directory. Alerts user to select directory
                 MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
                 JournalsDirPath = SelectDirectory();
+                int numberOfRetries = 0;
                 do
                 {
                     directory = new DirectoryInfo(JournalsDirPath);
@@ -314,6 +313,11 @@ namespace TKC
                     {
                         MessageBox.Show("Error: Directory has no log files. Select directory with log files.");
                         JournalsDirPath = SelectDirectory();
+                        numberOfRetries++;
+                    }
+                    if(numberOfRetries > 3)
+                    {
+                        MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
                     }
                     else
                     {
@@ -338,15 +342,13 @@ namespace TKC
             //Orders list by Last time it was written into (descending)
             sortedJournalsList = sortedJournalsList.OrderBy(x => x.LastWriteTime).ToList();
             return sortedJournalsList;
-            
-
         }
 
         /// <summary>
         /// Shows folder browser to user which selects ED journals directory
         /// </summary>
         /// <returns>List of Journals</returns>
-        /// <exception cref="Exception">User didn't selected directory.</exception>
+        /// <exception cref="ArgumentException">User didn't selected directory.</exception>
         private string SelectDirectory()
         {
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
@@ -356,9 +358,7 @@ namespace TKC
             }
             else
             {
-                log.Debug("User didn't selected directory.");
-                //TODO do something in case this happens
-                throw new Exception("User didn't selected directory.");
+                throw new ArgumentException("User didn't selected directory.");
             }
         }
     }

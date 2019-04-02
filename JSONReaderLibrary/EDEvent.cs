@@ -13,7 +13,7 @@ namespace TKC
     {
         //dont change name of properties, causes Errors with Newtonsoft JSON reading method
         /// <summary>
-        /// time event in Elite happened
+        /// Time when event happened in Elite
         /// </summary>
         public DateTime timestamp { get; set; }
         /// <summary>
