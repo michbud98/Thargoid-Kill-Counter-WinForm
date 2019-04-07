@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TKC
@@ -14,10 +16,10 @@ namespace TKC
         }
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         JSONReaderSingleton reader;
-       
+
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+
             string directoryPath;
             //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals TODO add this to CONFIG 
             directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
@@ -28,17 +30,31 @@ namespace TKC
             reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
 
             KillCounter.Text = "Click on button to scan files";
-            
-            Thread printingThread = new Thread(PrintKillsInIntervals)
-            {
-                Name = "Printer",
-                IsBackground = true
-            };
-            printingThread.Start();
 
-            
+            StartAsyncMethods();
+
         }
         private void button1_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        /// <summary>
+        /// Method that starts asynchrounous tasks
+        /// </summary>
+        private async void StartAsyncMethods()
+        {
+            List<Task> task = new List<Task>();
+
+            //Starts reading thread when it ends starts Printing kills on screen
+            await Task.Run(() => StartReadingLogs());
+            task.Add(Task.Run(() => PrintKillsInIntervals()));
+        }
+
+        /// <summary>
+        /// Starts JSON reader reading method
+        /// </summary>
+        private void StartReadingLogs()
         {
             try
             {
@@ -53,11 +69,8 @@ namespace TKC
             catch (Exception ex)
             {
                 log.Fatal("Unknown error", ex);
-                //TODO error Logging
                 throw;
             }
-            
-            //reader.ReadLastJsonWhilePlaying();
         }
 
         /// <summary>
