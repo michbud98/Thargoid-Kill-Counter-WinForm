@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TKCForm));
             this.KillCounter = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // KillCounter
@@ -44,22 +43,11 @@
             this.KillCounter.Text = "Thargoid Combat Kills\r\n------------------------\r\nScouts: 0\r\nCyclops: 0\r\nBasillisk" +
     ": 0\r\nMedusa: 0\r\nHydra: 0\r\nUnknown: 0\r\n------------------------\r\nTotal: 0";
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(168, 116);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // TKCForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(255, 161);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.KillCounter);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -76,7 +64,6 @@
         #endregion
 
         private System.Windows.Forms.Label KillCounter;
-        private System.Windows.Forms.Button button1;
     }
 }
 

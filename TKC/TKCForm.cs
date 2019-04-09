@@ -29,26 +29,34 @@ namespace TKC
             }
             reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
 
-            KillCounter.Text = "Click on button to scan files";
-
+            KillCounter.Text = "Scanning logs please wait";
+            
             StartAsyncMethods();
 
         }
-        private void button1_Click(object sender, EventArgs e)
-        {
-            
-        }
-
+       
         /// <summary>
         /// Method that starts asynchrounous tasks
         /// </summary>
         private async void StartAsyncMethods()
         {
-            List<Task> task = new List<Task>();
 
-            //Starts reading thread when it ends starts Printing kills on screen
             await Task.Run(() => StartReadingLogs());
-            task.Add(Task.Run(() => PrintKillsInIntervals()));
+            Thread printingThread = new Thread(PrintKillsInIntervals)
+            {
+                Name = "Printer",
+                IsBackground = true
+            };
+
+            Thread realTimeReaderThread = new Thread(reader.ReadLastJsonWhilePlaying)
+            {
+                Name = "RealTimeR",
+                IsBackground = true
+            };
+
+            realTimeReaderThread.Start();
+            printingThread.Start();
+
         }
 
         /// <summary>

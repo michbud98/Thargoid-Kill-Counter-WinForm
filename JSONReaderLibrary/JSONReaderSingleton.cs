@@ -27,7 +27,36 @@ namespace TKC
 
         private JSONReaderSingleton(string JournalsDirPath)
         {
-            this.JournalsDirPath = JournalsDirPath;
+            if(CheckIfLogDirExists(JournalsDirPath) == true)
+            {
+                this.JournalsDirPath = JournalsDirPath;
+            }
+            else
+            {
+                MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+
+                int numberOfRetries = 0;
+                do
+                {
+                    JournalsDirPath = SelectDirectory();
+                    if (numberOfRetries >= 3)
+                    {
+                        MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
+                        throw new ArgumentException("User selected wrong directory too many times");
+                    }
+                    if (CheckIfLogDirExists(JournalsDirPath) == false)
+                    {
+                        MessageBox.Show("Error: Directory has no log files. Select directory with log files.");
+                        numberOfRetries++;
+                    }
+                    else
+                    {
+                        this.JournalsDirPath = JournalsDirPath;
+                        break;
+                    }
+                } while (true);
+            }
+            
         }
 
         /// <summary>
@@ -43,6 +72,29 @@ namespace TKC
 
             return JSONReaderInstance;
         }
+
+        private Boolean CheckIfLogDirExists(string JournalsDirPath)
+        {
+            if (Directory.Exists(JournalsDirPath) == true)
+            {
+                DirectoryInfo directory = new DirectoryInfo(JournalsDirPath);//directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous"
+                FileInfo[] unsortedJournals = null;
+                unsortedJournals = directory.GetFiles("*.log");
+                if (unsortedJournals.Length == 0)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Detects thargoid kill from EDEvent class
         /// </summary>
@@ -163,69 +215,74 @@ namespace TKC
                 //string for file path
                 string path = lastLog.FullName;
                 EDEvent currentEvent = null;
-                try
+                fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                reader = new StreamReader(fileStream);
+                do
                 {
-                    fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    reader = new StreamReader(fileStream);
-                    do
+                    //if reader is not at the end of log file readline
+                    if (!reader.EndOfStream)
                     {
-                        //if reader is not at the end of log file readline
-                        if (!reader.EndOfStream)
+                        try
                         {
                             JSONStringLine = reader.ReadLine();
                             currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                            line++;
                             DetectThargoidKill(currentEvent, JSONStringLine);
+                            line++;
                         }
-                        //reader is at the end of the line checks if file changed
-                        else if (reader.EndOfStream)
+                        
+                        catch (JsonReaderException ex)
                         {
-                            bool fileChanged = false;
-                            //last time file was changed
-                            DateTime currentLastTimeWritten = DateTime.Now;
-                            do
-                            {
-                                lastLog = new FileInfo(path);
-                                //gets journals in directory
-                                sortedJournalsList = GetJournalsInDirectory();
-                                //gets current last log
-                                FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
-                                
-                                //true if file changed
-                                if (lastLog.LastWriteTime > currentLastTimeWritten)
-                                {
-                                    currentLastTimeWritten = lastLog.LastWriteTime;
-                                    fileChanged = true;
-                                }
-                                //True if at the end of file and directory has a newer log file
-                                else if (reader.EndOfStream && !logCheck.Name.Equals(lastLog.Name))
-                                {
-                                    line = 1;
-                                    lastLog = logCheck;
-                                    path = lastLog.FullName;
-                                    fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                                    reader = new StreamReader(fileStream);
-                                    fileChanged = true;
-                                }
-                                //else sleeps thread and restarts fileChanged cycle 5 sec later
-                                else
-                                {
-                                    lastLog = null;
-                                    Thread.Sleep(5000);
-                                }
-                            } while (fileChanged == false);
-                            //restarts the reading cycle
-                            continue;
+                            log.Debug(ex.Message, ex);
+                            line++;
                         }
-                    } while (true);
-                }
-                catch (JsonReaderException ex)
-                {
-                    //TODO error logging
-                }
+                    }
+                    //reader is at the end of the line checks if file changed
+                    else if (reader.EndOfStream)
+                    {
+                        bool fileChanged = false;
+                        //last time file was changed
+                        DateTime currentLastTimeWritten = DateTime.Now;
+                        do
+                        {
+                            lastLog = new FileInfo(path);
+                            //gets journals in directory
+                            sortedJournalsList = GetJournalsInDirectory();
+                            //gets current last log
+                            FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
+                                
+                            //true if file changed
+                            if (lastLog.LastWriteTime > currentLastTimeWritten)
+                            {
+                                currentLastTimeWritten = lastLog.LastWriteTime;
+                                fileChanged = true;
+                            }
+                            //True if at the end of file and directory has a newer log file
+                            else if (reader.EndOfStream && !logCheck.Name.Equals(lastLog.Name))
+                            {
+                                line = 1;
+                                lastLog = logCheck;
+                                path = lastLog.FullName;
+                                fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                                reader = new StreamReader(fileStream);
+                                fileChanged = true;
+                            }
+                            //else sleeps thread and restarts fileChanged cycle 5 sec later
+                            else
+                            {
+                                lastLog = null;
+                                Thread.Sleep(5000);
+                            }
+                        } while (fileChanged == false);
+                        //restarts the reading cycle
+                        continue;
+                    }
+                } while (true);
+                
+                
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                log.Error(ex.Message, ex);
                 throw;
             }
             finally
@@ -298,34 +355,7 @@ namespace TKC
             }
             catch (DirectoryNotFoundException ex)
             {
-                log.Debug(ex.Message);
-                //If app cant find default ED log directory. Alerts user to select directory
-                MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
-                JournalsDirPath = SelectDirectory();
-                int numberOfRetries = 0;
-                do
-                {
-                    directory = new DirectoryInfo(JournalsDirPath);
-                    unsortedJournals = directory.GetFiles("*.log");
-                    //check if field contains something if not user probably selected wrong directory
-                    //asks user for new dir
-                    if (unsortedJournals.Length == 0)
-                    {
-                        MessageBox.Show("Error: Directory has no log files. Select directory with log files.");
-                        JournalsDirPath = SelectDirectory();
-                        numberOfRetries++;
-                    }
-                    if(numberOfRetries > 3)
-                    {
-                        MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
-                    }
-                    else
-                    {
-                        break;
-                    }
-                } while (true);
-                
-
+                log.Debug(ex.Message, ex);
             }
             //List for sorted ED Journal files from directory
             //List<FileInfo>
@@ -351,6 +381,7 @@ namespace TKC
         /// <exception cref="ArgumentException">User didn't selected directory.</exception>
         private string SelectDirectory()
         {
+            
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
