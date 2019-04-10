@@ -14,17 +14,22 @@ namespace TKC
     /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
     /// <exception cref="ArgumentException">User didn't selected directory.</exception>
+    ///<exception cref="DirectoryNotFoundException">Reader didnt found logs dir.</exception>
     public class JSONReaderSingleton
     {
         //Error Logger
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         public KillCounter counter = new KillCounter();
-        private string JournalsDirPath;
+        private readonly string JournalsDirPath;
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
 
+        /// <summary>
+        /// Constructor of JSORReaderSingleton Class
+        /// </summary>
+        /// <param name="JournalsDirPath">Path where journals are located</param>
         private JSONReaderSingleton(string JournalsDirPath)
         {
             if(CheckIfLogDirExists(JournalsDirPath) == true)
@@ -34,6 +39,7 @@ namespace TKC
             else
             {
                 MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+                log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
 
                 int numberOfRetries = 0;
                 do
@@ -46,13 +52,24 @@ namespace TKC
                     }
                     if (CheckIfLogDirExists(JournalsDirPath) == false)
                     {
-                        MessageBox.Show("Error: Directory has no log files. Select directory with log files.");
+                        MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+                        log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
                         numberOfRetries++;
                     }
                     else
                     {
-                        this.JournalsDirPath = JournalsDirPath;
-                        break;
+                        if(CheckIfDirContainsLogs(JournalsDirPath) == true)
+                        {
+                            this.JournalsDirPath = JournalsDirPath;
+                            break;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
+                            log.Debug($"Directory doesnt contain logs.\r\nPath: {JournalsDirPath}");
+                            numberOfRetries++;
+                        }
+                        
                     }
                 } while (true);
             }
@@ -60,7 +77,7 @@ namespace TKC
         }
 
         /// <summary>
-        /// JSONReaderSingleton constructor
+        /// JSONReaderSingleton method that creates only one object of JSONReaderSingleton
         /// </summary>
         /// <returns>Single class of JSONReaders</returns>
         public static JSONReaderSingleton GetInstance(string JournalsDirPath)
@@ -69,29 +86,48 @@ namespace TKC
             {
                 JSONReaderInstance = new JSONReaderSingleton(JournalsDirPath);
             }
+            else
+            {
+                MessageBox.Show("Warning: Cant create more then one object of JSONReaderSingleton");
+                log.Warn("Warning: Tried to create more then one object of JSONReaderSingleton");
+            }
 
             return JSONReaderInstance;
         }
 
+        /// <summary>
+        /// Checks if directory exists
+        /// </summary>
+        /// <param name="JournalsDirPath">Path to selected directory</param>
+        /// <returns>true - dir existe, false - dir doesnt exist</returns>
         private Boolean CheckIfLogDirExists(string JournalsDirPath)
         {
             if (Directory.Exists(JournalsDirPath) == true)
             {
-                DirectoryInfo directory = new DirectoryInfo(JournalsDirPath);//directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous"
-                FileInfo[] unsortedJournals = null;
-                unsortedJournals = directory.GetFiles("*.log");
-                if (unsortedJournals.Length == 0)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return true;
             }
             else
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if selected directory contains logs
+        /// </summary>
+        /// <param name="JournalsDirPath">Path to selected directory</param>
+        /// <returns>true - contains logs, false - doesnt contain logs</returns>
+        private Boolean CheckIfDirContainsLogs(string JournalsDirPath)
+        {
+            DirectoryInfo directory = new DirectoryInfo(JournalsDirPath);//directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous"
+            FileInfo[] unsortedJournals = directory.GetFiles("*.log");
+            if (unsortedJournals.Length == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
 
@@ -280,9 +316,8 @@ namespace TKC
                 
                 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                log.Error(ex.Message, ex);
                 throw;
             }
             finally
@@ -335,13 +370,11 @@ namespace TKC
             GC.Collect();
         }
 
-        //string directoryPath;
-        //List of sorted Journals
-        //List<FileInfo> sortedJournalsList = null;
         /// <summary>
         /// Method which find all Elite dangerous Journals in selected directory
         /// </summary>
         /// <returns>List of Journals </returns>
+        ///<exception cref="DirectoryNotFoundException">Logs Direcory not found.</exception>
         private List<FileInfo> GetJournalsInDirectory()
         {
             //regex that matches ED journals names
@@ -355,7 +388,8 @@ namespace TKC
             }
             catch (DirectoryNotFoundException ex)
             {
-                log.Debug(ex.Message, ex);
+                log.Error(ex.Message, ex);
+                throw ex;
             }
             //List for sorted ED Journal files from directory
             //List<FileInfo>
@@ -389,7 +423,7 @@ namespace TKC
             }
             else
             {
-                throw new ArgumentException("User didn't selected directory.");
+                throw new ArgumentException("User didnt selected directory.");
             }
         }
     }

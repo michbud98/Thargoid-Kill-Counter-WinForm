@@ -19,15 +19,23 @@ namespace TKC
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
             string directoryPath;
-            //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals TODO add this to CONFIG 
+            //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
             directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
             if (Environment.OSVersion.Version.Major >= 6)
             {
                 directoryPath = Directory.GetParent(directoryPath).ToString();
             }
-            reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
+
+            try
+            {
+                reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
+            }
+            catch (ArgumentException ex)
+            {
+                log.Info(ex.Message, ex);
+                throw;
+            }
 
             KillCounter.Text = "Scanning logs please wait";
             
@@ -67,12 +75,6 @@ namespace TKC
             try
             {
                 reader.ReadDirectory();
-            }
-            catch (ArgumentException ex)
-            {
-                log.Error("User didn't selected directory", ex);
-                MessageBox.Show("User didn't selected directory. Application will now close.");
-                throw;
             }
             catch (Exception ex)
             {
