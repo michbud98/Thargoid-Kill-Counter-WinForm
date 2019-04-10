@@ -1,6 +1,6 @@
 ﻿namespace TKC
 {
-    partial class Form1
+    partial class TKCForm
     {
         /// <summary>
         /// Vyžaduje se proměnná návrháře.
@@ -28,26 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TKCForm));
             this.KillCounter = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // KillCounter
             // 
             this.KillCounter.AutoSize = true;
-            this.KillCounter.Location = new System.Drawing.Point(30, 48);
+            this.KillCounter.Location = new System.Drawing.Point(11, 9);
+            this.KillCounter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.KillCounter.Name = "KillCounter";
-            this.KillCounter.Size = new System.Drawing.Size(51, 20);
+            this.KillCounter.Size = new System.Drawing.Size(109, 130);
             this.KillCounter.TabIndex = 0;
-            this.KillCounter.Text = "label1";
+            this.KillCounter.Text = "Thargoid Combat Kills\r\n------------------------\r\nScouts: 0\r\nCyclops: 0\r\nBasillisk" +
+    ": 0\r\nMedusa: 0\r\nHydra: 0\r\nUnknown: 0\r\n------------------------\r\nTotal: 0";
             // 
-            // Form1
+            // TKCForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(474, 353);
+            this.ClientSize = new System.Drawing.Size(255, 161);
             this.Controls.Add(this.KillCounter);
-            this.Name = "Form1";
-            this.Text = "Thargoid Kill Calculator";
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(2);
+            this.MinimizeBox = false;
+            this.Name = "TKCForm";
+            this.Text = "Thargoid Kill Counter";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
