@@ -34,56 +34,32 @@ namespace TKC
         /// <param name="JournalsDirPathOutput">Output of constructor which has Journals dir path inside method completition</param>
         private JSONReaderSingleton(string JournalsDirPath, out string JournalsDirPathOutput)
         {
-
-            if (CheckIfLogDirExists(JournalsDirPath) == true && CheckIfDirContainsLogs(JournalsDirPath) == true)//Checks if directory passed in arguments exists and contains logs
+            int numberOfRetries = 0;
+            do
             {
-                this.JournalsDirPath = JournalsDirPath;
-            }
-            else //directory doesnt exist
-            {
-                if(CheckIfLogDirExists(JournalsDirPath) == true)
+                if (CheckIfLogDirExists(JournalsDirPath) == true && CheckIfDirContainsLogs(JournalsDirPath) == true)//Checks if directory passed in arguments exists and contains logs
+                {
+                    this.JournalsDirPath = JournalsDirPath;
+                    break;
+                }
+                else if (numberOfRetries >= 3) //User selected wrong directory more than 3 times, app exits
+                {
+                    MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
+                    throw new ArgumentException("User selected wrong directory too many times");
+                }
+                else if(CheckIfLogDirExists(JournalsDirPath) == false)
                 {
                     MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
-                }else if(CheckIfDirContainsLogs(JournalsDirPath) == true)
+                    log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
+                    numberOfRetries++;
+                }else if(CheckIfDirContainsLogs(JournalsDirPath) == false)
                 {
                     MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
+                    log.Debug($"Directory doesnt contain logs.\r\nPath: {JournalsDirPath}");
+                    numberOfRetries++;
                 }
-                
-                log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
-
-                int numberOfRetries = 0;
-                do
-                {
-                    JournalsDirPath = SelectDirectory();//Makes user select directory
-                    if (numberOfRetries >= 3) //User selected wrong directory more than 3 times, app exits
-                    {
-                        MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
-                        throw new ArgumentException("User selected wrong directory too many times");
-                    }
-                    if (CheckIfLogDirExists(JournalsDirPath) == false) //Directory doesnt exist
-                    {
-                        MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
-                        log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
-                        numberOfRetries++;
-                    }
-                    else //Directory exist
-                    {
-                        if(CheckIfDirContainsLogs(JournalsDirPath) == true) //Directory exist and contains log files
-                        {
-                            MessageBox.Show("Directory saved to application config. You can change directory path in settings menu.");
-                            this.JournalsDirPath = JournalsDirPath;
-                            break;
-                        }
-                        else //Directory exist but doesnt contain any log files
-                        {
-                            MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
-                            log.Debug($"Directory doesnt contain logs.\r\nPath: {JournalsDirPath}");
-                            numberOfRetries++;
-                        }
-                        
-                    }
-                } while (true);
-            }
+                JournalsDirPath = SelectDirectory();
+            } while (true);
             //sends directory path out so that it can be saved to config
             JournalsDirPathOutput = JournalsDirPath;
         }
