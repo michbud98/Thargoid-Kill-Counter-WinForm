@@ -8,6 +8,9 @@ using System.Windows.Forms;
 
 namespace TKC
 {
+    /// <summary>
+    /// Windows form class that handles main user interaction
+    /// </summary>
     public partial class MainUIWindow : Form
     {
 
@@ -21,6 +24,7 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             string directoryPath;
+            string directoryPathOutput;
             if (ConfigurationManager.AppSettings["FirstRun"].Equals("true"))
             {
                 //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
@@ -29,22 +33,22 @@ namespace TKC
                 {
                     directoryPath = Directory.GetParent(directoryPath).ToString() + @"\Saved Games\Frontier Developments\Elite Dangerous";
                 }
+                ChangeConfig("JournalsDirPath", directoryPath);
+                ChangeConfig("FirstRun", "false");
 
-                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                config.AppSettings.Settings["JournalsDirPath"].Value = directoryPath;
-                config.AppSettings.Settings["FirstRun"].Value = "false";
-                config.Save(ConfigurationSaveMode.Modified);
-
-                ConfigurationManager.RefreshSection("appSettings");
             }
             else
             {
                 directoryPath = ConfigurationManager.AppSettings["JournalsDirPath"];
             }
-
             try
             {
-                reader = JSONReaderSingleton.GetInstance(directoryPath);
+                reader = JSONReaderSingleton.GetInstance(directoryPath, out directoryPathOutput);
+                //saves Journals directory path to config if its different
+                if (!directoryPathOutput.Equals(ConfigurationManager.AppSettings["JournalsDirPath"]))
+                {
+                    ChangeConfig("JournalsDirPath", directoryPath);
+                }
             }
             catch (ArgumentException ex)
             {
@@ -145,6 +149,27 @@ namespace TKC
             }
         }
 
-        
+        /// <summary>
+        /// Changes values in app.config app setting section
+        /// </summary>
+        /// <param name="key">Key of setting</param>
+        /// <param name="value">Value of setting</param>
+        private void ChangeConfig(string key, string value)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings[key].Value = value;
+            config.Save(ConfigurationSaveMode.Modified);
+
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        /// <summary>
+        /// Opens settings menu
+        /// </summary>
+        private void SettingsToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            UserSettings us = new UserSettings();
+            us.ShowDialog();
+        }
     }
 }

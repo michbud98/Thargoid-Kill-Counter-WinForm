@@ -1,20 +1,58 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Configuration;
 using System.Windows.Forms;
 
 namespace TKC
 {
+    /// <summary>
+    /// Windows form class that handles user settings modification
+    /// </summary>
     public partial class UserSettings : Form
     {
         public UserSettings()
         {
             InitializeComponent();
+        }
+        /// <summary>
+        /// Loads settings saved in app.config
+        /// </summary>
+        private void UserSettings_Load(object sender, EventArgs e)
+        {
+            JournalsDirTB.Text = ConfigurationManager.AppSettings["JournalsDirPath"];
+        }
+        /// <summary>
+        /// Changes values in app.config app setting section
+        /// </summary>
+        /// <param name="key">Key of setting</param>
+        /// <param name="value">Value of setting</param>
+        private void ChangeConfig(string key, string value)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings[key].Value = value;
+            config.Save(ConfigurationSaveMode.Modified);
+
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+        /// <summary>
+        /// Button that saves all settings and exits window
+        /// </summary>
+        private void SaveButton_Click(object sender, EventArgs e)
+        {
+            bool change = false;
+            string stringOfChanges = "";
+            if(!ConfigurationManager.AppSettings["JournalsDirPath"].Equals(JournalsDirTB.Text))
+            {
+                ChangeConfig("JournalsDirPath", JournalsDirTB.Text);
+                ChangeConfig("DefaultPath", "false");
+                change = true;
+                stringOfChanges += "Default directory changed \r\n";
+            }
+            
+            if(change == true)
+            {
+                MessageBox.Show($"{stringOfChanges}Changes will display after restart.");
+            }
+            this.Close();
         }
     }
 }
