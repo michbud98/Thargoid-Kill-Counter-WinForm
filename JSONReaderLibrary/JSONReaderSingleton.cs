@@ -35,13 +35,20 @@ namespace TKC
         private JSONReaderSingleton(string JournalsDirPath, out string JournalsDirPathOutput)
         {
 
-            if (CheckIfLogDirExists(JournalsDirPath) == true)//Checks if directory passed in arguments exists
+            if (CheckIfLogDirExists(JournalsDirPath) == true && CheckIfDirContainsLogs(JournalsDirPath) == true)//Checks if directory passed in arguments exists and contains logs
             {
                 this.JournalsDirPath = JournalsDirPath;
             }
             else //directory doesnt exist
             {
-                MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+                if(CheckIfLogDirExists(JournalsDirPath) == true)
+                {
+                    MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+                }else if(CheckIfDirContainsLogs(JournalsDirPath) == true)
+                {
+                    MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
+                }
+                
                 log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
 
                 int numberOfRetries = 0;

@@ -47,6 +47,7 @@
             // 
             this.JournalsDirTB.Location = new System.Drawing.Point(13, 30);
             this.JournalsDirTB.Name = "JournalsDirTB";
+            this.JournalsDirTB.ReadOnly = true;
             this.JournalsDirTB.Size = new System.Drawing.Size(459, 20);
             this.JournalsDirTB.TabIndex = 1;
             // 
@@ -58,6 +59,7 @@
             this.JournalsDirButton.TabIndex = 2;
             this.JournalsDirButton.Text = "Browse";
             this.JournalsDirButton.UseVisualStyleBackColor = true;
+            this.JournalsDirButton.Click += new System.EventHandler(this.JournalsDirButton_Click);
             // 
             // SaveButton
             // 

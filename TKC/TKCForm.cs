@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,6 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             string directoryPath;
-            string directoryPathOutput;
             if (ConfigurationManager.AppSettings["FirstRun"].Equals("true"))
             {
                 //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
@@ -43,7 +43,7 @@ namespace TKC
             }
             try
             {
-                reader = JSONReaderSingleton.GetInstance(directoryPath, out directoryPathOutput);
+                reader = JSONReaderSingleton.GetInstance(directoryPath, out string directoryPathOutput);
                 //saves Journals directory path to config if its different
                 if (!directoryPathOutput.Equals(ConfigurationManager.AppSettings["JournalsDirPath"]))
                 {
@@ -107,14 +107,21 @@ namespace TKC
         /// </summary>
         private void PrintKillsInIntervals()
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             Boolean endOfTheCycle = true;
             while (endOfTheCycle == true)
             {
-
+                TimeSpan ts = stopWatch.Elapsed;
                 if (reader.counter.CheckKillChange() == true)
                 {
                     KillCounterSetText(reader.counter.PrintAllKills());
 
+                }
+                else if (reader.counter.CheckIfKillsZero() == true && ts.Seconds == 10)
+                {
+                    KillCounterSetText(reader.counter.PrintAllKills());
                 }
                 else
                 {

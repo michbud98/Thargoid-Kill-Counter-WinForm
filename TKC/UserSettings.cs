@@ -13,6 +13,7 @@ namespace TKC
         {
             InitializeComponent();
         }
+
         /// <summary>
         /// Loads settings saved in app.config
         /// </summary>
@@ -20,6 +21,7 @@ namespace TKC
         {
             JournalsDirTB.Text = ConfigurationManager.AppSettings["JournalsDirPath"];
         }
+
         /// <summary>
         /// Changes values in app.config app setting section
         /// </summary>
@@ -33,6 +35,7 @@ namespace TKC
 
             ConfigurationManager.RefreshSection("appSettings");
         }
+
         /// <summary>
         /// Button that saves all settings and exits window
         /// </summary>
@@ -40,19 +43,27 @@ namespace TKC
         {
             bool change = false;
             string stringOfChanges = "";
-            if(!ConfigurationManager.AppSettings["JournalsDirPath"].Equals(JournalsDirTB.Text))
+            if (!ConfigurationManager.AppSettings["JournalsDirPath"].Equals(JournalsDirTB.Text))
             {
                 ChangeConfig("JournalsDirPath", JournalsDirTB.Text);
-                ChangeConfig("DefaultPath", "false");
                 change = true;
                 stringOfChanges += "Default directory changed \r\n";
             }
-            
-            if(change == true)
+
+            if (change == true)
             {
                 MessageBox.Show($"{stringOfChanges}Changes will display after restart.");
             }
             this.Close();
+        }
+
+        private void JournalsDirButton_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            {
+                JournalsDirTB.Text = folderBrowserDialog1.SelectedPath;
+            }
         }
     }
 }
