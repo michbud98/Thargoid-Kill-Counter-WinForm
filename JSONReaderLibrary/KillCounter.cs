@@ -74,7 +74,20 @@ namespace TKC
                 return false;
             }
         }
+        public bool CheckIfKillsZero()
+        {
 
-        
+            if (allTypesKills == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+
     }
 }

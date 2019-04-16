@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,10 +8,13 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-    public partial class TKCForm : Form
+    /// <summary>
+    /// Windows form class that handles main user interaction
+    /// </summary>
+    public partial class MainUIWindow : Form
     {
 
-        public TKCForm()
+        public MainUIWindow()
         {
             InitializeComponent();
         }
@@ -20,16 +24,30 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             string directoryPath;
-            //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
-            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
+            if (ConfigurationManager.AppSettings["FirstRun"].Equals("true"))
             {
-                directoryPath = Directory.GetParent(directoryPath).ToString();
-            }
+                //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
+                directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+                if (Environment.OSVersion.Version.Major >= 6)
+                {
+                    directoryPath = Directory.GetParent(directoryPath).ToString() + @"\Saved Games\Frontier Developments\Elite Dangerous";
+                }
+                ChangeConfig("JournalsDirPath", directoryPath);
+                ChangeConfig("FirstRun", "false");
 
+            }
+            else
+            {
+                directoryPath = ConfigurationManager.AppSettings["JournalsDirPath"];
+            }
             try
             {
-                reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
+                reader = JSONReaderSingleton.GetInstance(directoryPath, out string directoryPathOutput);
+                //saves Journals directory path to config if its different
+                if (!directoryPathOutput.Equals(ConfigurationManager.AppSettings["JournalsDirPath"]))
+                {
+                    ChangeConfig("JournalsDirPath", directoryPath);
+                }
             }
             catch (ArgumentException ex)
             {
@@ -38,11 +56,11 @@ namespace TKC
             }
 
             KillCounter.Text = "Scanning logs please wait";
-            
+
             StartAsyncMethods();
 
         }
-       
+
         /// <summary>
         /// Method that starts asynchrounous tasks
         /// </summary>
@@ -88,14 +106,21 @@ namespace TKC
         /// </summary>
         private void PrintKillsInIntervals()
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             Boolean endOfTheCycle = true;
             while (endOfTheCycle == true)
             {
-
+                TimeSpan ts = stopWatch.Elapsed;
                 if (reader.counter.CheckKillChange() == true)
                 {
                     KillCounterSetText(reader.counter.PrintAllKills());
 
+                }
+                else if (reader.counter.CheckIfKillsZero() == true && ts.Seconds == 10)
+                {
+                    KillCounterSetText(reader.counter.PrintAllKills());
                 }
                 else
                 {
@@ -130,6 +155,27 @@ namespace TKC
             }
         }
 
-        
+        /// <summary>
+        /// Changes values in app.config app setting section
+        /// </summary>
+        /// <param name="key">Key of setting</param>
+        /// <param name="value">Value of setting</param>
+        private void ChangeConfig(string key, string value)
+        {
+            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings[key].Value = value;
+            config.Save(ConfigurationSaveMode.Modified);
+
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+
+        /// <summary>
+        /// Opens settings menu
+        /// </summary>
+        private void SettingsToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            UserSettings us = new UserSettings();
+            us.ShowDialog();
+        }
     }
 }

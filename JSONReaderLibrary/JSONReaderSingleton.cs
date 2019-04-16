@@ -30,68 +30,58 @@ namespace TKC
         /// Constructor of JSORReaderSingleton Class
         /// </summary>
         /// <param name="JournalsDirPath">Path where journals are located</param>
-        private JSONReaderSingleton(string JournalsDirPath)
+        /// <param name="JournalsDirPathOutput">Output of constructor which has Journals dir path inside method completition</param>
+        private JSONReaderSingleton(string JournalsDirPath, out string JournalsDirPathOutput)
         {
-            if(CheckIfLogDirExists(JournalsDirPath) == true)
+            int numberOfRetries = 0;
+            do
             {
-                this.JournalsDirPath = JournalsDirPath;
-            }
-            else
-            {
-                MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
-                log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
-
-                int numberOfRetries = 0;
-                do
+                if (CheckIfLogDirExists(JournalsDirPath) == true && CheckIfDirContainsLogs(JournalsDirPath) == true)//Checks if directory passed in arguments exists and contains logs
                 {
-                    JournalsDirPath = SelectDirectory();
-                    if (numberOfRetries >= 3)
-                    {
-                        MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
-                        throw new ArgumentException("User selected wrong directory too many times");
-                    }
-                    if (CheckIfLogDirExists(JournalsDirPath) == false)
-                    {
-                        MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
-                        log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
-                        numberOfRetries++;
-                    }
-                    else
-                    {
-                        if(CheckIfDirContainsLogs(JournalsDirPath) == true)
-                        {
-                            this.JournalsDirPath = JournalsDirPath;
-                            break;
-                        }
-                        else
-                        {
-                            MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
-                            log.Debug($"Directory doesnt contain logs.\r\nPath: {JournalsDirPath}");
-                            numberOfRetries++;
-                        }
-                        
-                    }
-                } while (true);
-            }
-            
+                    this.JournalsDirPath = JournalsDirPath;
+                    break;
+                }
+                else if (numberOfRetries >= 3) //User selected wrong directory more than 3 times, app exits
+                {
+                    MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
+                    throw new ArgumentException("User selected wrong directory too many times");
+                }
+                else if(CheckIfLogDirExists(JournalsDirPath) == false)
+                {
+                    MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
+                    log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
+                    numberOfRetries++;
+                }else if(CheckIfDirContainsLogs(JournalsDirPath) == false)
+                {
+                    MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
+                    log.Debug($"Directory doesnt contain logs.\r\nPath: {JournalsDirPath}");
+                    numberOfRetries++;
+                }
+                JournalsDirPath = SelectDirectory();
+            } while (true);
+            //sends directory path out so that it can be saved to config
+            JournalsDirPathOutput = JournalsDirPath;
         }
 
         /// <summary>
         /// JSONReaderSingleton method that creates only one object of JSONReaderSingleton
         /// </summary>
-        /// <returns>Single class of JSONReaders</returns>
-        public static JSONReaderSingleton GetInstance(string JournalsDirPath)
+        /// <param name="JournalsDirPath">Journals directory path</param>
+        /// <param name="JournalsDirPathOutput">Output of constructor which has Journals dir path inside method completition</param>
+        /// <returns></returns>
+        public static JSONReaderSingleton GetInstance(string JournalsDirPath,out string JournalsDirPathOutput)
         {
+            string temp = null;
             if (JSONReaderInstance == null)
             {
-                JSONReaderInstance = new JSONReaderSingleton(JournalsDirPath);
+                JSONReaderInstance = new JSONReaderSingleton(JournalsDirPath, out temp);
             }
             else
             {
                 MessageBox.Show("Warning: Cant create more then one object of JSONReaderSingleton");
                 log.Warn("Warning: Tried to create more then one object of JSONReaderSingleton");
             }
-
+            JournalsDirPathOutput = temp;
             return JSONReaderInstance;
         }
 
