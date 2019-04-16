@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,10 +8,10 @@ using System.Windows.Forms;
 
 namespace TKC
 {
-    public partial class TKCForm : Form
+    public partial class MainUIWindow : Form
     {
 
-        public TKCForm()
+        public MainUIWindow()
         {
             InitializeComponent();
         }
@@ -20,16 +21,30 @@ namespace TKC
         private void Form1_Load(object sender, EventArgs e)
         {
             string directoryPath;
-            //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
-            directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
-            if (Environment.OSVersion.Version.Major >= 6)
+            if (ConfigurationManager.AppSettings["FirstRun"].Equals("true"))
             {
-                directoryPath = Directory.GetParent(directoryPath).ToString();
+                //finds path to Users folder ("C:\Users\<user>)" which is then used to find default path of ED journals
+                directoryPath = Directory.GetParent(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).FullName;
+                if (Environment.OSVersion.Version.Major >= 6)
+                {
+                    directoryPath = Directory.GetParent(directoryPath).ToString() + @"\Saved Games\Frontier Developments\Elite Dangerous";
+                }
+
+                var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                config.AppSettings.Settings["JournalsDirPath"].Value = directoryPath;
+                config.AppSettings.Settings["FirstRun"].Value = "false";
+                config.Save(ConfigurationSaveMode.Modified);
+
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+            else
+            {
+                directoryPath = ConfigurationManager.AppSettings["JournalsDirPath"];
             }
 
             try
             {
-                reader = JSONReaderSingleton.GetInstance(directoryPath + @"\Saved Games\Frontier Developments\Elite Dangerous");
+                reader = JSONReaderSingleton.GetInstance(directoryPath);
             }
             catch (ArgumentException ex)
             {
@@ -38,11 +53,11 @@ namespace TKC
             }
 
             KillCounter.Text = "Scanning logs please wait";
-            
+
             StartAsyncMethods();
 
         }
-       
+
         /// <summary>
         /// Method that starts asynchrounous tasks
         /// </summary>
