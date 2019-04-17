@@ -8,6 +8,9 @@ namespace ScreenShotLibrary
 {
     public class ScreenShoter
     {
+        //Error Logger
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         /// <summary>
         /// Creates a screenshot and saves it to screenshot directory next to exe file
         /// </summary>
@@ -29,6 +32,7 @@ namespace ScreenShotLibrary
                 {
                     Directory.CreateDirectory("screenshots");
                 }
+                // Save the screenshot to the specified path
                 bitmap.Save(@"screenshots\Screenshot.png", ImageFormat.Png);
             }
             catch(Exception)
@@ -36,13 +40,13 @@ namespace ScreenShotLibrary
                 //log it
                 throw;
             }
-            // Save the screenshot to the specified path that the user has chosen.
             
         }
+
         /// <summary>
         /// Creates a screenshot and saves it to screenshot directory next to exe file with selected name
         /// </summary>
-        /// <param name="fileName">Name of screenshot</param>
+        /// <param name="fileName">Name of screenshot in directory</param>
         public void MakeScreenShot(string fileName)
         {
             Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
@@ -61,14 +65,14 @@ namespace ScreenShotLibrary
                 {
                     Directory.CreateDirectory("screenshots");
                 }
+                // Save the screenshot to the specified path and name from argument
                 bitmap.Save($@"screenshots\{fileName}.png", ImageFormat.Png);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //log it
-                throw;
+                //turn of screenshot saving
+                log.Error("Unknown error while saving screenshot", ex);
             }
-            // Save the screenshot to the specified path that the user has chosen.
 
         }
     }

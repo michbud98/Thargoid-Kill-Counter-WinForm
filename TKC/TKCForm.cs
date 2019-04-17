@@ -1,5 +1,4 @@
-﻿using ScreenShotLibrary;
-using System;
+﻿using System;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -75,7 +74,7 @@ namespace TKC
                 IsBackground = true
             };
 
-            Thread realTimeReaderThread = new Thread(reader.ReadLastJsonWhilePlaying)
+            Thread realTimeReaderThread = new Thread(StartReadingInRealTime)
             {
                 Name = "RealTimeR",
                 IsBackground = true
@@ -94,6 +93,22 @@ namespace TKC
             try
             {
                 reader.ReadDirectory();
+            }
+            catch (Exception ex)
+            {
+                log.Fatal("Unknown error", ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Starts JSON reader reading method
+        /// </summary>
+        private void StartReadingInRealTime()
+        {
+            try
+            {
+                reader.ReadLastJsonWhilePlaying();
             }
             catch (Exception ex)
             {

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using ScreenShotLibrary;
 
 namespace TKC
 {
@@ -22,6 +23,7 @@ namespace TKC
 
         public KillCounter counter = new KillCounter();
         private readonly string JournalsDirPath;
+        ScreenShoter screenShoter = new ScreenShoter();
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
@@ -169,7 +171,73 @@ namespace TKC
                 }
             }
         }
-        
+
+        /// <summary>
+        /// Checks if Json String line contains thargoid kill, returns name of Thargoid killed if true
+        /// </summary>
+        /// <param name="e1"></param>
+        /// <param name="JSONStringLine"></param>
+        /// <param name="ThargoidType"></param>
+        /// <returns>true on thargoid kill, false on no kill</returns>
+        private bool DetectThargoidKill(EDEvent e1, string JSONStringLine, out string ThargoidType)
+        {
+            bool killDetected = false;
+            ThargoidType = "No kill";
+            ThargoidKillEvent kill;
+            if (e1.@event.Equals("FactionKillBond"))
+            {
+                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
+                {
+                    log.Debug($"Faulty line passed to DetectThargoidKill. AwardingFaction and VictimFaction are null\r\n Text of line - {JSONStringLine}");
+                }
+                else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
+                {
+                    int caseSwitch = kill.reward;
+                    switch (caseSwitch)
+                    {
+                        case 10000:
+                            counter.scout++;
+                            counter.allTypesKills++;
+                            killDetected = true;
+                            ThargoidType = $"Scout{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                        case 2000000:
+                            counter.cyclops++;
+                            counter.allTypesKills++;
+                            killDetected = true;
+                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                        case 6000000:
+                            counter.basillisk++;
+                            counter.allTypesKills++;
+                            killDetected = true;
+                            ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                        case 10000000:
+                            counter.medusa++;
+                            counter.allTypesKills++;
+                            killDetected = true;
+                            ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                        case 15000000:
+                            counter.hydra++;
+                            counter.allTypesKills++;
+                            killDetected = true;
+                            ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                        default:
+                            counter.unknown++;
+                            log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
+                            killDetected = true;
+                            ThargoidType = $"Unknown{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                    }
+                }
+            }
+            return killDetected;
+        }
+
         /// <summary>
         /// Method which reads JSON file 
         /// </summary>
@@ -191,6 +259,10 @@ namespace TKC
                     try
                     {
                         JSONStringLine = reader.ReadLine();
+                        if (JSONStringLine.Equals("")) //if line contains nothing skips line and reads next
+                        {
+                            continue;
+                        }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                         DetectThargoidKill(currentEvent, JSONStringLine);
                     }
@@ -223,13 +295,12 @@ namespace TKC
         /// <summary>
         /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application) REQUIRES another thread
         /// </summary>
-        /// 
         public void ReadLastJsonWhilePlaying()
         {
             //integer for current line of reading
             int line = 1;
-            //debug string for current JSONStringLine
             string JSONStringLine = "";
+            //debug string for current JSONStringLine
             FileStream fileStream = null;
             StreamReader reader = null;
             try
@@ -250,10 +321,19 @@ namespace TKC
                     {
                         try
                         {
-                            JSONStringLine = reader.ReadLine();
-                            currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                            DetectThargoidKill(currentEvent, JSONStringLine);
-                            line++;
+                        //Searching for thargoid kill
+                        JSONStringLine = reader.ReadLine();
+                        if (JSONStringLine.Equals("")) //if line contains nothing skips line and reads next
+                        {
+                            continue;
+                        }
+                        currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                        if(DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType)) // && settings has print screen true
+                        {
+                            Console.WriteLine($"Saving screenshot of {thargoidType}");
+                            screenShoter.MakeScreenShot(thargoidType);
+                        }
+                        line++;
                         }
                         
                         catch (JsonReaderException ex)
@@ -303,11 +383,10 @@ namespace TKC
                         continue;
                     }
                 } while (true);
-                
-                
             }
             catch (Exception)
             {
+                log4net.GlobalContext.Properties["Prop1"] = JSONStringLine;
                 throw;
             }
             finally
