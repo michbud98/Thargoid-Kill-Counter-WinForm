@@ -15,7 +15,7 @@ namespace TKC
     /// Singleton class that Reads a Elite dangerous log files and prints thargoid kills
     /// </summary>
     /// <exception cref="ArgumentException">User didn't selected directory.</exception>
-    ///<exception cref="DirectoryNotFoundException">Reader didnt found logs dir.</exception>
+    /// <exception cref="DirectoryNotFoundException">Reader didnt found logs dir.</exception>
     public class JSONReaderSingleton
     {
         //Error Logger
