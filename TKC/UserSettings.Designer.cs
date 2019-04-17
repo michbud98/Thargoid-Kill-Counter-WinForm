@@ -32,6 +32,7 @@
             this.JournalsDirTB = new System.Windows.Forms.TextBox();
             this.JournalsDirButton = new System.Windows.Forms.Button();
             this.SaveButton = new System.Windows.Forms.Button();
+            this.ScreenShotsCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // JournalsDirLabel
@@ -71,11 +72,22 @@
             this.SaveButton.UseVisualStyleBackColor = true;
             this.SaveButton.Click += new System.EventHandler(this.SaveButton_Click);
             // 
+            // ScreenShotsCheckBox
+            // 
+            this.ScreenShotsCheckBox.AutoSize = true;
+            this.ScreenShotsCheckBox.Location = new System.Drawing.Point(16, 95);
+            this.ScreenShotsCheckBox.Name = "ScreenShotsCheckBox";
+            this.ScreenShotsCheckBox.Size = new System.Drawing.Size(141, 17);
+            this.ScreenShotsCheckBox.TabIndex = 4;
+            this.ScreenShotsCheckBox.Text = "Screenshot thargoid kills";
+            this.ScreenShotsCheckBox.UseVisualStyleBackColor = true;
+            // 
             // UserSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(484, 259);
+            this.Controls.Add(this.ScreenShotsCheckBox);
             this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.JournalsDirButton);
             this.Controls.Add(this.JournalsDirTB);
@@ -95,5 +107,6 @@
         private System.Windows.Forms.TextBox JournalsDirTB;
         private System.Windows.Forms.Button JournalsDirButton;
         private System.Windows.Forms.Button SaveButton;
+        private System.Windows.Forms.CheckBox ScreenShotsCheckBox;
     }
 }

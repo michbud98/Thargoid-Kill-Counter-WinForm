@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.102
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowUI", "TKC\WindowUI.csproj", "{6F7BBCF6-6612-4BCC-B073-58025A949296}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JSONReaderLibrary", "JSONReaderLibrary\JSONReaderLibrary.csproj", "{7A157F4F-61D4-451C-B35A-F42416F97DF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenShotLibrary", "ScreenShotLibrary\ScreenShotLibrary.csproj", "{E1BCB5AD-A915-450D-B0D3-5631FF4CC5A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{7A157F4F-61D4-451C-B35A-F42416F97DF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A157F4F-61D4-451C-B35A-F42416F97DF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A157F4F-61D4-451C-B35A-F42416F97DF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1BCB5AD-A915-450D-B0D3-5631FF4CC5A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1BCB5AD-A915-450D-B0D3-5631FF4CC5A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1BCB5AD-A915-450D-B0D3-5631FF4CC5A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1BCB5AD-A915-450D-B0D3-5631FF4CC5A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
