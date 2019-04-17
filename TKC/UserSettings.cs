@@ -20,6 +20,8 @@ namespace TKC
         private void UserSettings_Load(object sender, EventArgs e)
         {
             JournalsDirTB.Text = ConfigurationManager.AppSettings["JournalsDirPath"];
+            bool.TryParse(ConfigurationManager.AppSettings["ScreenShotsPermission"], out bool ScreenShotsPermission);
+            ScreenShotsCheckBox.Checked = ScreenShotsPermission;
         }
 
         /// <summary>
@@ -48,6 +50,12 @@ namespace TKC
                 ChangeConfig("JournalsDirPath", JournalsDirTB.Text);
                 change = true;
                 stringOfChanges += "Default directory changed \r\n";
+            }
+            if (!ConfigurationManager.AppSettings["ScreenShotsPermission"].Equals(ScreenShotsCheckBox.Checked.ToString()))
+            {
+                ChangeConfig("ScreenShotsPermission", ScreenShotsCheckBox.Checked.ToString());
+                change = true;
+                stringOfChanges += "Screenshots permission changed \r\n";
             }
 
             if (change == true)

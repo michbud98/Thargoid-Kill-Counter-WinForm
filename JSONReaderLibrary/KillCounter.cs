@@ -1,48 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TKC
+﻿namespace TKC
 {
     /// <summary>
     /// Handles kill counting
     /// </summary>
     public class KillCounter
     {
-        /// <summary>
-        /// last total before call of method CheckKillChange
-        /// </summary>
-        private int lastAllTypesKills;
-
-        internal int scout;
-        internal int cyclops;
-        internal int basillisk;
-        internal int medusa;
-        internal int hydra;
-        /// <summary>
-        /// Variable which saves number of unknown thargoid type kills
-        /// </summary>
-        internal int unknown;
-        /// <summary>
-        /// total of all kills
-        /// </summary>
-        internal int allTypesKills;
+        internal int Scout { get; set; }
+        internal int Cyclops { get; set; }
+        internal int Basillisk { get; set; }
+        internal int Medusa { get; set; }
+        internal int Hydra { get; set; }
+        internal int Unknown { get; set; }
+        internal int AllTypesKills { get; set; }
+        public int LastAllTypesKills { get; set; }
 
         /// <summary>
         /// Method which resets all thargoid kills
         /// </summary>
         internal void ResetThargoidKills()
         {
-            scout = 0;
-            cyclops = 0;
-            basillisk = 0;
-            medusa = 0;
-            hydra = 0;
-            unknown = 0;
-            allTypesKills = 0;
-            lastAllTypesKills = 0;
+            Scout = 0;
+            Cyclops = 0;
+            Basillisk = 0;
+            Medusa = 0;
+            Hydra = 0;
+            Unknown = 0;
+            AllTypesKills = 0;
+            LastAllTypesKills = 0;
         }
 
         /// <summary>
@@ -53,8 +37,8 @@ namespace TKC
         {
             /*"Thargoid Combat Kills\r\n" + "------------------------" + "\r\nScouts: " + scout + "\r\nCyclops: " + cyclops + "\r\nBasillisk: " + basillisk + "\r\nMedusa: " +
               medusa + "\r\nHydra: " + hydra + "\r\nUnknown: " + unknown + "\r\n------------------------" + "\r\nTotal: " + allTypesKills;*/
-            return $"Thargoid Combat Kills\r\n------------------------\r\nScouts: {scout}\r\nCyclops: {cyclops}\r\nBasillisk: {basillisk} " +
-                $"\r\nMedusa: {medusa}\r\nHydra: {hydra}\r\nUnknown: {unknown}\r\n------------------------\r\nTotal: {allTypesKills}";
+            return $"Thargoid Combat Kills\r\n------------------------\r\nScouts: {Scout}\r\nCyclops: {Cyclops}\r\nBasillisk: {Basillisk} " +
+                $"\r\nMedusa: {Medusa}\r\nHydra: {Hydra}\r\nUnknown: {Unknown}\r\n------------------------\r\nTotal: {AllTypesKills}";
         }
 
         /// <summary>
@@ -64,9 +48,9 @@ namespace TKC
         public bool CheckKillChange()
         {
 
-            if (allTypesKills > lastAllTypesKills)
+            if (AllTypesKills > LastAllTypesKills)
             {
-                lastAllTypesKills = allTypesKills;
+                LastAllTypesKills = AllTypesKills;
                 return true;
             }
             else
@@ -77,7 +61,7 @@ namespace TKC
         public bool CheckIfKillsZero()
         {
 
-            if (allTypesKills == 0)
+            if (AllTypesKills == 0)
             {
                 return true;
             }

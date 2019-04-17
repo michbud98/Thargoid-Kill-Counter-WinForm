@@ -20,10 +20,10 @@ namespace TKC
     {
         //Error Logger
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        public KillCounter counter = new KillCounter();
         private readonly string JournalsDirPath;
-        ScreenShoter screenShoter = new ScreenShoter();
+        private readonly ScreenShoter ScreenShoter = new ScreenShoter();
+        public KillCounter Counter { get; set; } = new KillCounter();
+        public bool ScreenShotBool { get; set; }
 
         //Storage variable for singleton
         private static JSONReaderSingleton JSONReaderInstance;
@@ -33,7 +33,8 @@ namespace TKC
         /// </summary>
         /// <param name="JournalsDirPath">Path where journals are located</param>
         /// <param name="JournalsDirPathOutput">Output of constructor which has Journals dir path inside method completition</param>
-        private JSONReaderSingleton(string JournalsDirPath, out string JournalsDirPathOutput)
+        /// <param name="ScreenShotBool">Bool that tells JSONReader if he can produce screenshots</param>
+        private JSONReaderSingleton(string JournalsDirPath, out string JournalsDirPathOutput, bool ScreenShotBool)
         {
             int numberOfRetries = 0;
             do
@@ -63,6 +64,7 @@ namespace TKC
             } while (true);
             //sends directory path out so that it can be saved to config
             JournalsDirPathOutput = JournalsDirPath;
+            this.ScreenShotBool = ScreenShotBool;
         }
 
         /// <summary>
@@ -70,13 +72,14 @@ namespace TKC
         /// </summary>
         /// <param name="JournalsDirPath">Journals directory path</param>
         /// <param name="JournalsDirPathOutput">Output of constructor which has Journals dir path inside method completition</param>
+        /// <param name="ScreenShotBool">Bool that tells JSONReader if he can produce screenshots</param>
         /// <returns></returns>
-        public static JSONReaderSingleton GetInstance(string JournalsDirPath,out string JournalsDirPathOutput)
+        public static JSONReaderSingleton GetInstance(string JournalsDirPath,out string JournalsDirPathOutput, bool ScreenShotBool)
         {
             string temp = null;
             if (JSONReaderInstance == null)
             {
-                JSONReaderInstance = new JSONReaderSingleton(JournalsDirPath, out temp);
+                JSONReaderInstance = new JSONReaderSingleton(JournalsDirPath, out temp, ScreenShotBool);
             }
             else
             {
@@ -126,8 +129,8 @@ namespace TKC
         /// <summary>
         /// Detects thargoid kill from EDEvent class
         /// </summary>
-        /// <param name="e1"> converted JSON text to class </param>
-        /// <param name="JSONStringLine"> JSON text </param>
+        /// <param name="e1">converted JSON text to class</param>
+        /// <param name="JSONStringLine">JSON text</param>
         private void DetectThargoidKill(EDEvent e1, string JSONStringLine)
         {
             ThargoidKillEvent kill;
@@ -144,27 +147,27 @@ namespace TKC
                     switch (caseSwitch)
                     {
                         case 10000:
-                            counter.scout++;
-                            counter.allTypesKills++;
+                            Counter.Scout++;
+                            Counter.AllTypesKills++;
                             break;
                         case 2000000:
-                            counter.cyclops++;
-                            counter.allTypesKills++;
+                            Counter.Cyclops++;
+                            Counter.AllTypesKills++;
                             break;
                         case 6000000:
-                            counter.basillisk++;
-                            counter.allTypesKills++;
+                            Counter.Basillisk++;
+                            Counter.AllTypesKills++;
                             break;
                         case 10000000:
-                            counter.medusa++;
-                            counter.allTypesKills++;
+                            Counter.Medusa++;
+                            Counter.AllTypesKills++;
                             break;
                         case 15000000:
-                            counter.hydra++;
-                            counter.allTypesKills++;
+                            Counter.Hydra++;
+                            Counter.AllTypesKills++;
                             break;
                         default:
-                            counter.unknown++;
+                            Counter.Unknown++;
                             log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
                             break;
                     }
@@ -175,9 +178,9 @@ namespace TKC
         /// <summary>
         /// Checks if Json String line contains thargoid kill, returns name of Thargoid killed if true
         /// </summary>
-        /// <param name="e1"></param>
-        /// <param name="JSONStringLine"></param>
-        /// <param name="ThargoidType"></param>
+        /// <param name="e1">converted JSON text to class</param>
+        /// <param name="JSONStringLine">JSON text</param>
+        /// <param name="ThargoidType">name of thargoid type</param>
         /// <returns>true on thargoid kill, false on no kill</returns>
         private bool DetectThargoidKill(EDEvent e1, string JSONStringLine, out string ThargoidType)
         {
@@ -197,40 +200,40 @@ namespace TKC
                     switch (caseSwitch)
                     {
                         case 10000:
-                            counter.scout++;
-                            counter.allTypesKills++;
+                            Counter.Scout++;
+                            Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Scout{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Scout{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
                             break;
                         case 2000000:
-                            counter.cyclops++;
-                            counter.allTypesKills++;
+                            Counter.Cyclops++;
+                            Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
                             break;
                         case 6000000:
-                            counter.basillisk++;
-                            counter.allTypesKills++;
+                            Counter.Basillisk++;
+                            Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
                             break;
                         case 10000000:
-                            counter.medusa++;
-                            counter.allTypesKills++;
+                            Counter.Medusa++;
+                            Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
                             break;
                         case 15000000:
-                            counter.hydra++;
-                            counter.allTypesKills++;
+                            Counter.Hydra++;
+                            Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
                             break;
                         default:
-                            counter.unknown++;
+                            Counter.Unknown++;
                             log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
                             killDetected = true;
-                            ThargoidType = $"Unknown{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Unknown{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
                             break;
                     }
                 }
@@ -328,10 +331,10 @@ namespace TKC
                             continue;
                         }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        if(DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType)) // && settings has print screen true
+                        if(DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true) //Prints screenshot if thargoid kill is detected and User permited screenshots
                         {
                             Console.WriteLine($"Saving screenshot of {thargoidType}");
-                            screenShoter.MakeScreenShot(thargoidType);
+                            ScreenShoter.MakeScreenShot(thargoidType);
                         }
                         line++;
                         }
@@ -410,7 +413,7 @@ namespace TKC
         {
             const int NUMBER_OF_RETRIES = 1;
             const int DELAY = 10;
-            counter.ResetThargoidKills();
+            Counter.ResetThargoidKills();
             List<FileInfo> journalsList = JSONReaderInstance.GetJournalsInDirectory();
             string path = "";
             //reads all Journal files except last one (the one which Elite Dangerous writes in real-time)

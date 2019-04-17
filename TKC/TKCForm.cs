@@ -23,6 +23,7 @@ namespace TKC
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //getting a logfiles directory path
             string directoryPath;
             if (ConfigurationManager.AppSettings["FirstRun"].Equals("true"))
             {
@@ -40,9 +41,11 @@ namespace TKC
             {
                 directoryPath = ConfigurationManager.AppSettings["JournalsDirPath"];
             }
+
+            bool.TryParse(ConfigurationManager.AppSettings["ScreenShotsPermission"], out bool ScreenShotsPermission);
             try
             {
-                reader = JSONReaderSingleton.GetInstance(directoryPath, out string directoryPathOutput);
+                reader = JSONReaderSingleton.GetInstance(directoryPath, out string directoryPathOutput, ScreenShotsPermission);
                 //saves Journals directory path to config if its different
                 if (!directoryPathOutput.Equals(ConfigurationManager.AppSettings["JournalsDirPath"]))
                 {
@@ -129,14 +132,14 @@ namespace TKC
             while (endOfTheCycle == true)
             {
                 TimeSpan ts = stopWatch.Elapsed;
-                if (reader.counter.CheckKillChange() == true)
+                if (reader.Counter.CheckKillChange() == true)
                 {
-                    KillCounterSetText(reader.counter.PrintAllKills());
+                    KillCounterSetText(reader.Counter.PrintAllKills());
 
                 }
-                else if (reader.counter.CheckIfKillsZero() == true && ts.Seconds == 10)
+                else if (reader.Counter.CheckIfKillsZero() == true && ts.Seconds == 10)
                 {
-                    KillCounterSetText(reader.counter.PrintAllKills());
+                    KillCounterSetText(reader.Counter.PrintAllKills());
                 }
                 else
                 {
