@@ -10,7 +10,7 @@ namespace TKC
     static class Program
     {
         /// <summary>
-        /// Hlavní vstupní bod aplikace.
+        /// Main access poit of application
         /// </summary>
         [STAThread]
         static void Main()

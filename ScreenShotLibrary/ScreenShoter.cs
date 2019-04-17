@@ -6,13 +6,16 @@ using System;
 
 namespace ScreenShotLibrary
 {
+    /// <summary>
+    /// Class that handles screen shots of thargoid kills
+    /// </summary>
     public class ScreenShoter
     {
         //Error Logger
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Creates a screenshot and saves it to screenshot directory next to exe file
+        /// Creates a screenshot and saves it to screenshot directory next to exe file as Screenshot.png
         /// </summary>
         public void MakeScreenShot()
         {
@@ -44,9 +47,9 @@ namespace ScreenShotLibrary
         }
 
         /// <summary>
-        /// Creates a screenshot and saves it to screenshot directory next to exe file with selected name
+        /// Creates a screenshot and saves it to screenshot directory next to exe file with selected name in png format
         /// </summary>
-        /// <param name="fileName">Name of screenshot in directory</param>
+        /// <param name="fileName">Name of screenshot to be saved in directory</param>
         public void MakeScreenShot(string fileName)
         {
             Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
