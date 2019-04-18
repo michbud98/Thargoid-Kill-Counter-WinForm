@@ -193,7 +193,7 @@ namespace TKC
         /// </summary>
         private void SettingsToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            UserSettings us = new UserSettings();
+            Settings us = new Settings();
             us.ShowDialog();
         }
     }

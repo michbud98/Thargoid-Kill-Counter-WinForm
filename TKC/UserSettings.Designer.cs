@@ -1,6 +1,6 @@
 ﻿namespace TKC
 {
-    partial class UserSettings
+    partial class Settings
     {
         /// <summary>
         /// Required designer variable.
@@ -82,7 +82,7 @@
             this.ScreenShotsCheckBox.Text = "Screenshot thargoid kills";
             this.ScreenShotsCheckBox.UseVisualStyleBackColor = true;
             // 
-            // UserSettings
+            // Settings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -93,7 +93,8 @@
             this.Controls.Add(this.JournalsDirTB);
             this.Controls.Add(this.JournalsDirLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Name = "UserSettings";
+            this.Name = "Settings";
+            this.ShowIcon = false;
             this.Text = "UserSettings";
             this.Load += new System.EventHandler(this.UserSettings_Load);
             this.ResumeLayout(false);

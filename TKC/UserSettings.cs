@@ -7,9 +7,9 @@ namespace TKC
     /// <summary>
     /// Windows form class that handles user settings modification
     /// </summary>
-    public partial class UserSettings : Form
+    public partial class Settings : Form
     {
-        public UserSettings()
+        public Settings()
         {
             InitializeComponent();
         }
