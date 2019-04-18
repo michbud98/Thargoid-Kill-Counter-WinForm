@@ -95,7 +95,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Settings";
             this.ShowIcon = false;
-            this.Text = "UserSettings";
+            this.Text = "Settings";
             this.Load += new System.EventHandler(this.UserSettings_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
