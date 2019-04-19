@@ -202,8 +202,7 @@ namespace TKC
                         case 10000:
                             Counter.Scout++;
                             Counter.AllTypesKills++;
-                            killDetected = true;
-                            ThargoidType = $"Scout{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
+                            //Method wont change boolean killDetected, because Scout screenshots are not interesting
                             break;
                         case 2000000:
                             Counter.Cyclops++;
@@ -333,9 +332,8 @@ namespace TKC
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
                             //Prints screenshot if thargoid kill is detected and User permited screenshots and if log is from current day
-                        if (DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true && lastLog.LastWriteTime > DateTime.Now.AddHours(-1))
+                        if (DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true && lastLog.LastWriteTime >= DateTime.Now.AddSeconds(-5))
                         {
-                            
                             ScreenShoter.MakeScreenShot(thargoidType);
                         }
                         line++;

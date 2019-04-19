@@ -60,7 +60,8 @@ namespace TKC
 
             if (change == true)
             {
-                MessageBox.Show($"{stringOfChanges}Changes will display after restart.");
+                MessageBox.Show($"{stringOfChanges}Application will restart.");
+                Application.Restart();
             }
             this.Close();
         }
