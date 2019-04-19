@@ -331,9 +331,11 @@ namespace TKC
                             continue;
                         }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        if(DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true) //Prints screenshot if thargoid kill is detected and User permited screenshots
+
+                            //Prints screenshot if thargoid kill is detected and User permited screenshots and if log is from current day
+                        if (DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true && lastLog.LastWriteTime > DateTime.Now.AddHours(-1))
                         {
-                            Console.WriteLine($"Saving screenshot of {thargoidType}");
+                            
                             ScreenShoter.MakeScreenShot(thargoidType);
                         }
                         line++;
@@ -405,7 +407,6 @@ namespace TKC
                 }
             }
         }
-
         /// <summary>
         /// Reads all Journal files in selected directory
         /// </summary>
