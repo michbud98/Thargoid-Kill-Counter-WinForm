@@ -84,7 +84,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(2);
-            this.MinimizeBox = false;
+            this.MaximizeBox = false;
             this.Name = "MainUIWindow";
             this.Text = "Thargoid Kill Counter";
             this.Load += new System.EventHandler(this.Form1_Load);

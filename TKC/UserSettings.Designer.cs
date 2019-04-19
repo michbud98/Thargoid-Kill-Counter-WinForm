@@ -93,6 +93,7 @@
             this.Controls.Add(this.JournalsDirTB);
             this.Controls.Add(this.JournalsDirLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "Settings";
             this.ShowIcon = false;
             this.Text = "Settings";
