@@ -208,31 +208,31 @@ namespace TKC
                             Counter.Cyclops++;
                             Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
+                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                         case 6000000:
                             Counter.Basillisk++;
                             Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
+                            ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                         case 10000000:
                             Counter.Medusa++;
                             Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
+                            ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                         case 15000000:
                             Counter.Hydra++;
                             Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
+                            ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                         default:
                             Counter.Unknown++;
                             log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
                             killDetected = true;
-                            ThargoidType = $"Unknown{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss-ffff")}";
+                            ThargoidType = $"Unknown{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                     }
                 }
