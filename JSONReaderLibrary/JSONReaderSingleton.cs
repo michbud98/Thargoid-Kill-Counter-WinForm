@@ -208,7 +208,7 @@ namespace TKC
                             Counter.Cyclops++;
                             Counter.AllTypesKills++;
                             killDetected = true;
-                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}"; //format of datetime day-month-hour-minutes-seconds
                             break;
                         case 6000000:
                             Counter.Basillisk++;
