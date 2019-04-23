@@ -1,9 +1,12 @@
+[![AXI Discord](https://img.shields.io/discord/164411426939600896.svg?style=social&label=AXI%20Discord)](https://discord.gg/gZbAWCF)
+
+
 # Thargoid-Kill-Counter
 This app calculates Thargoid kills from Elite Dangerous log files and if user wishes creates screenshot of Thargoid kill.
 
 ## Usage
 ### Download and first run
-1. Download zip file and exctract its contents inside folder of your choice. **Keep application and config inside the folder or application won't work.**
+1. Download [zip file](https://github.com/Prorok9999/Thargoid-Kill-Counter/releases/latest) and extract it's contents inside folder of your choice. **Keep application and config inside the folder or application won't work.**
 2. Run TKC exe file. At first run app is going to try to locate default Elite Dangerous log files directory.
 - If it is succesful the app will print out current kills. 
 - If app is not able to find default path to logs directory if will ask you to select it with folder browser. Once application finds logs directory it  will remember its location on next start. **From that moment you can just start the application and it will calculate kills immediately.**
