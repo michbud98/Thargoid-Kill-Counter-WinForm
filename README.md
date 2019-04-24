@@ -24,6 +24,7 @@ If you want application to create screenshots of thargoid kills:
 2. Check/Uncheck screenshot thargoid kill check box.
 3. Hit save button.
 4. Restart application.
+**Note: Screenshots are saved inside screenshots folder next to exe file.**
 
 ## Acknowledgements
 - “Elite: Dangerous” is © 1984 - 2019 Frontier Developments plc.
