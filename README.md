@@ -2,7 +2,9 @@
 
 
 # Thargoid-Kill-Counter
-This app calculates Thargoid kills from Elite Dangerous log files and if user wishes creates screenshot of Thargoid kill.
+Features
+ - Calculates thargoid kills while playing Elite Dangerous
+ - Saves screenshot of when player kills any Thargoid Interceptor variant (must be anabled in settings)
 
 ## Usage
 ### Download and first run
