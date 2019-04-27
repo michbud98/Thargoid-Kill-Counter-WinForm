@@ -2,7 +2,7 @@
 
 
 # Thargoid-Kill-Counter
-Features
+## Features
  - Calculates thargoid kills while playing Elite Dangerous
  - Saves screenshot of when player kills any Thargoid Interceptor variant (must be anabled in settings)
 
