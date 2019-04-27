@@ -266,7 +266,10 @@ namespace TKC
                             continue;
                         }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        DetectThargoidKill(currentEvent, JSONStringLine);
+                        if(currentEvent != null){
+                            DetectThargoidKill(currentEvent, JSONStringLine);
+                        }
+
                     }
                     catch (JsonReaderException ex)
                     {
@@ -323,20 +326,24 @@ namespace TKC
                     {
                         try
                         {
-                        //Searching for thargoid kill
-                        JSONStringLine = reader.ReadLine();
-                        if (JSONStringLine.Equals("")) //if line contains nothing skips line and reads next
-                        {
-                            continue;
-                        }
-                        currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                            //Searching for thargoid kill
+                            JSONStringLine = reader.ReadLine();
+                            if (JSONStringLine.Equals("")) //if line contains nothing skips line and reads next
+                            {
+                                continue;
+                            }
+                            currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
+                            if (currentEvent == null)
+                            {
+                                continue;
+                            }
                             //Prints screenshot if thargoid kill is detected and User permited screenshots and if log is from current day
-                        if (DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true && lastLog.LastWriteTime >= DateTime.Now.AddSeconds(-5))
-                        {
-                            ScreenShoter.MakeScreenShot(thargoidType);
-                        }
-                        line++;
+                            else if (DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true && lastLog.LastWriteTime >= DateTime.Now.AddSeconds(-5))
+                            {
+                                ScreenShoter.MakeScreenShot(thargoidType);
+                            }
+                            line++;
                         }
                         
                         catch (JsonReaderException ex)

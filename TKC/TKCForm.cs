@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +24,9 @@ namespace TKC
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
             //getting a logfiles directory path
             string directoryPath;
             if (ConfigurationManager.AppSettings["FirstRun"].Equals("true"))
@@ -93,6 +97,8 @@ namespace TKC
         /// </summary>
         private void StartReadingLogs()
         {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
             try
             {
                 reader.ReadDirectory();
@@ -109,6 +115,9 @@ namespace TKC
         /// </summary>
         private void StartReadingInRealTime()
         {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+            
             try
             {
                 reader.ReadLastJsonWhilePlaying();
@@ -125,6 +134,9 @@ namespace TKC
         /// </summary>
         private void PrintKillsInIntervals()
         {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
