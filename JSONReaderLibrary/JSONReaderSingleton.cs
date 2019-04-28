@@ -280,6 +280,7 @@ namespace TKC
             }
             catch (Exception)
             {
+                log4net.GlobalContext.Properties["Prop1"] = JSONStringLine;
                 log.Error($"Unknown error while reading file {filePath}");
                 throw;
             }
@@ -412,6 +413,7 @@ namespace TKC
                 }
             }
         }
+
         /// <summary>
         /// Reads all Journal files in selected directory
         /// </summary>
