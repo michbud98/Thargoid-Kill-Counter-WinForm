@@ -33,7 +33,7 @@ If you want application to create screenshots of thargoid kills:
 - Thanks to Anti Xeno Initiative for logo and helpfull tips on thargoid hunting.
 - Using [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) created by James Newton-King  
   - Copyright (c) 2007 James Newton-King - [Licence](https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md)
-- Using [log4net](https://github.com/JamesNK/Newtonsoft.Json) created by The Apache Software Foundation
+- Using [log4net](https://logging.apache.org/log4net/) created by The Apache Software Foundation
   - [Licence](https://logging.apache.org/log4net/license.html)
 
 ## Licence
