@@ -11,19 +11,18 @@ namespace TKC
     /// </summary>
     internal class ThargoidKillEvent : EDEvent
     {
-        //dont change name of properties, causes Errors with Newtonsoft JSON reading method
         /// <summary>
         /// Reward -- in Credits, tels us which thargoid we killed 10 k Scout, 2 mil Cyclops, 6 mil Basillisk, 10 mil Medusa, 15 mil Hydra
         /// </summary>
-        public int reward { get; set; }
+        public int Reward { get; set; }
         /// <summary>
         /// Faction that gave us Credits (Pilots Federation)
         /// </summary>
-        public string awardingFaction_Localised { get; set; }
+        public string AwardingFaction { get; set; }
         /// <summary>
         /// Faction that we killed (Thargoids)
         /// </summary>
-        public string victimFaction_Localised { get; set; }
+        public string VictimFaction { get; set; }
 
         /// <summary>
         /// Writes Event to string 
@@ -31,8 +30,9 @@ namespace TKC
         /// <returns>Event in string</returns>
         public override string ToString()
         {
-            //(" Timestamp: {0} Event: {1} reward: {2} awardingFaction: {3} victimFaction: {4}", timestamp, @event, reward, awardingFaction_Localised, victimFaction_Localised);
-            return $"Timestamp: {timestamp} Event: {@event} reward: {reward} awardingFaction: {awardingFaction_Localised} victimFaction: {victimFaction_Localised}";
+            //(" Timestamp: {0} Event: {1} reward: {2} awardingFaction: {3} victimFaction: {4}", timestamp, @event, reward, awardingFaction, victimFaction);
+            return $"Timestamp: {timestamp} Event: {@event} reward: {Reward} awardingFaction: {AwardingFaction} victimFaction: {VictimFaction}";
         }
     }
+
 }

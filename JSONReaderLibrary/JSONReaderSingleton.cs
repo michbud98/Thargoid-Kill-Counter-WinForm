@@ -137,13 +137,13 @@ namespace TKC
             if (e1.@event.Equals("FactionKillBond"))
             {
                 kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
+                if (kill.AwardingFaction == null || kill.VictimFaction == null)
                 {
                     log.Debug($"Faulty line passed to DetectThargoidKill. AwardingFaction and VictimFaction are null\r\n Text of line - {JSONStringLine}");
                 }
-                else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
+                else if (kill.AwardingFaction.Equals(@"$faction_PilotsFederation;") || kill.VictimFaction.Equals(@"$faction_Thargoid;"))
                 {
-                    int caseSwitch = kill.reward;
+                    int caseSwitch = kill.Reward;
                     switch (caseSwitch)
                     {
                         case 10000:
@@ -168,7 +168,7 @@ namespace TKC
                             break;
                         default:
                             Counter.Unknown++;
-                            log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
+                            log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.Reward}");
                             break;
                     }
                 }
@@ -190,13 +190,13 @@ namespace TKC
             if (e1.@event.Equals("FactionKillBond"))
             {
                 kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                if (kill.awardingFaction_Localised == null || kill.victimFaction_Localised == null)
+                if (kill.AwardingFaction == null || kill.VictimFaction == null)
                 {
                     log.Debug($"Faulty line passed to DetectThargoidKill. AwardingFaction and VictimFaction are null\r\n Text of line - {JSONStringLine}");
                 }
-                else if (kill.awardingFaction_Localised.Equals("Pilots Federation") || kill.victimFaction_Localised.Equals("Thargoids"))
+                else if (kill.AwardingFaction.Equals(@"$faction_PilotsFederation;") || kill.VictimFaction.Equals(@"$faction_Thargoid;"))
                 {
-                    int caseSwitch = kill.reward;
+                    int caseSwitch = kill.Reward;
                     switch (caseSwitch)
                     {
                         case 10000:
@@ -230,7 +230,7 @@ namespace TKC
                             break;
                         default:
                             Counter.Unknown++;
-                            log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.reward}");
+                            log.Info($"NEW THARGOID TYPE - Found unknown new type of thargoid. Credits for kill: {kill.Reward}");
                             killDetected = true;
                             ThargoidType = $"Unknown{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
@@ -266,7 +266,7 @@ namespace TKC
                             continue;
                         }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        if(currentEvent != null){
+                        if (currentEvent != null){ //reads only if corverter corverts JSON FILE
                             DetectThargoidKill(currentEvent, JSONStringLine);
                         }
 
@@ -334,7 +334,7 @@ namespace TKC
                             }
                             currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
-                            if (currentEvent == null)
+                            if (currentEvent == null) //reads only if corverter corverts JSON FILE else it will jump on next line
                             {
                                 continue;
                             }
