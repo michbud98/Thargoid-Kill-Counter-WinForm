@@ -31,9 +31,9 @@ If you want application to create screenshots of thargoid kills:
 ## Acknowledgements
 - “Elite: Dangerous” is © 1984 - 2019 Frontier Developments plc.
 - Thanks to Anti Xeno Initiative for logo and helpfull tips on thargoid hunting.
-- Using [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) created by James Newton-King  
+- Using [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) created by [James Newton-King](https://github.com/JamesNK)
   - Copyright (c) 2007 James Newton-King - [Licence](https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md)
-- Using [log4net](https://logging.apache.org/log4net/) created by The Apache Software Foundation
+- Using [log4net](https://logging.apache.org/log4net/) created by [The Apache Software Foundation](https://www.apache.org)
   - [Licence](https://logging.apache.org/log4net/license.html)
 
 ## Licence
