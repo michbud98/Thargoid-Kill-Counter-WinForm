@@ -1,13 +1,14 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using ScreenShotLibrary;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using ScreenShotLibrary;
 
 namespace TKC
 {
@@ -49,12 +50,13 @@ namespace TKC
                     MessageBox.Show("Error: U selected directory with no log files too many times. Program now terminates.");
                     throw new ArgumentException("User selected wrong directory too many times");
                 }
-                else if(CheckIfLogDirExists(JournalsDirPath) == false)
+                else if (CheckIfLogDirExists(JournalsDirPath) == false)
                 {
                     MessageBox.Show("Error: Cant find directory. Please select directory where ED journals are located.");
                     log.Debug($"Directory not found.\r\nPath: {JournalsDirPath}");
                     numberOfRetries++;
-                }else if(CheckIfDirContainsLogs(JournalsDirPath) == false)
+                }
+                else if (CheckIfDirContainsLogs(JournalsDirPath) == false)
                 {
                     MessageBox.Show($"Error: No logs detected in directory. Select valid directory.\r\nPath: {JournalsDirPath}");
                     log.Debug($"Directory doesnt contain logs.\r\nPath: {JournalsDirPath}");
@@ -74,7 +76,7 @@ namespace TKC
         /// <param name="JournalsDirPathOutput">Output of constructor which has Journals dir path inside method completition</param>
         /// <param name="ScreenShotBool">Bool that tells JSONReader if he can produce screenshots</param>
         /// <returns></returns>
-        public static JSONReaderSingleton GetInstance(string JournalsDirPath,out string JournalsDirPathOutput, bool ScreenShotBool)
+        public static JSONReaderSingleton GetInstance(string JournalsDirPath, out string JournalsDirPathOutput, bool ScreenShotBool)
         {
             string temp = null;
             if (JSONReaderInstance == null)
@@ -136,7 +138,7 @@ namespace TKC
             ThargoidKillEvent kill;
             if (e1.@event.Equals("FactionKillBond"))
             {
-                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine,new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                kill = JsonConvert.DeserializeObject<ThargoidKillEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                 if (kill.AwardingFaction == null || kill.VictimFaction == null)
                 {
                     log.Debug($"Faulty line passed to DetectThargoidKill. AwardingFaction and VictimFaction are null\r\n Text of line - {JSONStringLine}");
@@ -202,7 +204,7 @@ namespace TKC
                         case 10000:
                             Counter.Scout++;
                             Counter.AllTypesKills++;
-                            //Method wont change boolean killDetected, because Scout screenshots are not interesting
+                            //Method wont change boolean killDetected, because Scout screenshots are not interesting but it is counted
                             break;
                         case 2000000:
                             Counter.Cyclops++;
@@ -266,7 +268,8 @@ namespace TKC
                             continue;
                         }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                        if (currentEvent != null){ //reads only if corverter corverts JSON FILE
+                        if (currentEvent != null)
+                        { //reads only if corverter corverts JSON FILE
                             DetectThargoidKill(currentEvent, JSONStringLine);
                         }
 
@@ -287,11 +290,11 @@ namespace TKC
             finally
             {
                 //closes stream and reader in case of some unknown error
-                if(fileStream != null)
+                if (fileStream != null)
                 {
                     fileStream.Close();
                 }
-                if(reader != null)
+                if (reader != null)
                 {
                     reader.Close();
                 }
@@ -299,105 +302,62 @@ namespace TKC
         }
 
         /// <summary>
-        /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application) REQUIRES another thread
+        /// Reads JSON file from selected line
         /// </summary>
-        public void ReadLastJsonWhilePlaying()
+        /// <param name="filePath">Path to file</param>
+        /// <param name="line">Line number from which reader starts reading</param>
+        /// <returns>Line number where reader ended</returns>
+        private int ReadJsonFile(string filePath, int line)
         {
-            //integer for current line of reading
-            int line = 1;
-            string JSONStringLine = "";
             //debug string for current JSONStringLine
+            string JSONStringLine = "";
             FileStream fileStream = null;
             StreamReader reader = null;
             try
             {
-                //gets journals in directory
-                List<FileInfo> sortedJournalsList = GetJournalsInDirectory();
-                //last log which will be read in realtime
-                FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
-                //string for file path
-                string path = lastLog.FullName;
-                EDEvent currentEvent = null;
-                fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 reader = new StreamReader(fileStream);
-                do
-                {
-                    //if reader is not at the end of log file readline
-                    if (!reader.EndOfStream)
-                    {
-                        try
-                        {
-                            //Searching for thargoid kill
-                            JSONStringLine = reader.ReadLine();
-                            if (JSONStringLine.Equals("")) //if line contains nothing skips line and reads next
-                            {
-                                continue;
-                            }
-                            currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                FileInfo logFile = new FileInfo(filePath);
+                EDEvent currentEvent = null;
 
-                            if (currentEvent == null) //reads only if corverter corverts JSON FILE else it will jump on next line
-                            {
-                                continue;
-                            }
-                            //Prints screenshot if thargoid kill is detected and User permited screenshots and if log is from current day
-                            else if (DetectThargoidKill(currentEvent, JSONStringLine, out string thargoidType) && ScreenShotBool == true && lastLog.LastWriteTime >= DateTime.Now.AddSeconds(-5))
-                            {
-                                ScreenShoter.MakeScreenShot(thargoidType);
-                            }
-                            line++;
-                        }
-                        
-                        catch (JsonReaderException ex)
-                        {
-                            log.Debug(ex.Message, ex);
-                            line++;
-                        }
-                    }
-                    //reader is at the end of the line checks if file changed
-                    else if (reader.EndOfStream)
+                //skips the lines that previous readers have red
+                for (int i = 1; i < line; i++)
+                {
+                    reader.ReadLine();
+                }
+
+                while (!reader.EndOfStream)
+                {
+                    try
                     {
-                        bool fileChanged = false;
-                        //last time file was changed
-                        DateTime currentLastTimeWritten = DateTime.Now;
-                        do
+                        JSONStringLine = reader.ReadLine();
+                        if (JSONStringLine.Equals("")) //if line contains nothing skips line and reads next
                         {
-                            lastLog = new FileInfo(path);
-                            //gets journals in directory
-                            sortedJournalsList = GetJournalsInDirectory();
-                            //gets current last log
-                            FileInfo logCheck = sortedJournalsList[sortedJournalsList.Count - 1];
-                                
-                            //true if file changed
-                            if (lastLog.LastWriteTime > currentLastTimeWritten)
+                            continue;
+                        }
+                        currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                        if (currentEvent != null)
+                        { //reads only if corverter corverts JSON FILE
+                            if(DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && logFile.LastWriteTime >= DateTime.Now.AddMinutes(-3))
                             {
-                                currentLastTimeWritten = lastLog.LastWriteTime;
-                                fileChanged = true;
+                                ScreenShoter.MakeScreenShot(ThargoidType);
+                                Console.WriteLine("Screen created of " + ThargoidType);
                             }
-                            //True if at the end of file and directory has a newer log file
-                            else if (reader.EndOfStream && !logCheck.Name.Equals(lastLog.Name))
-                            {
-                                line = 1;
-                                lastLog = logCheck;
-                                path = lastLog.FullName;
-                                fileStream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                                reader = new StreamReader(fileStream);
-                                fileChanged = true;
-                            }
-                            //else sleeps thread and restarts fileChanged cycle 5 sec later
-                            else
-                            {
-                                lastLog = null;
-                                Thread.Sleep(5000);
-                            }
-                        } while (fileChanged == false);
-                        //restarts the reading cycle
+                        }
+                        line++;
+                    }
+                    catch (JsonReaderException ex)
+                    {
+                        log.Debug("JSONReader exception occured", ex);
                         continue;
                     }
-                } while (true);
+                }
+                return line;
             }
             catch (Exception)
             {
                 log4net.GlobalContext.Properties["Prop1"] = JSONStringLine;
+                log.Error($"Unknown error while reading file {filePath}");
                 throw;
             }
             finally
@@ -412,6 +372,71 @@ namespace TKC
                     reader.Close();
                 }
             }
+        }
+
+        /// <summary>
+        /// Reads last Log while game is running(reads or tries to find a new file to read until user closes application) REQUIRES another thread
+        /// </summary>
+        public void ReadLastJsonWhilePlaying()
+        {
+            //gets last Journal from ED directory
+            List<FileInfo> sortedJournalsList = GetJournalsInDirectory();
+            FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
+            byte[] lastLogHash = GetFileHash(lastLog.FullName);
+            int line = ReadJsonFile(lastLog.FullName, 1);
+
+            //Control variables
+            FileInfo controlLog;
+            byte[] controlHash;
+            DateTime currentLastTimeWritten = DateTime.Now;
+            do
+            {
+                sortedJournalsList = GetJournalsInDirectory();
+                controlLog = sortedJournalsList[sortedJournalsList.Count - 1];
+                controlHash = GetFileHash(controlLog.FullName);
+
+                //true if file changed (compares hash value of lastLog a
+                if (BitConverter.ToString(lastLogHash) != BitConverter.ToString(controlHash) && lastLog.Name.Equals(controlLog.Name) || lastLog.LastWriteTime > currentLastTimeWritten)
+                {
+                    currentLastTimeWritten = lastLog.LastWriteTime;
+                    lastLogHash = controlHash;
+                    line = ReadJsonFile(lastLog.FullName, line);
+                    Console.WriteLine("File changed on line " + line);
+                }
+                //True if at the end of file and directory has a newer log file
+                else if (!controlLog.Name.Equals(lastLog.Name))
+                {
+                    line = 1;
+                    lastLog = controlLog;
+                    line = ReadJsonFile(lastLog.FullName, line);
+                    Console.WriteLine("Found new file " + lastLog.Name);
+                }
+                //else sleeps thread and restarts fileChanged cycle 2 sec later
+                else
+                {
+                    Console.WriteLine("Sleeping on line " + line);
+                    Thread.Sleep(2000);
+                }
+
+            } while (true);
+        }
+
+        /// <summary>
+        /// Gets hash value of file
+        /// </summary>
+        /// <param name="filePath">Path to file</param>
+        /// <returns>Hash value of file</returns>
+        private byte[] GetFileHash(string filePath)
+        {
+            HashAlgorithm hashAlg = HashAlgorithm.Create();
+            byte[] fileHash;
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                fileHash = hashAlg.ComputeHash(fileStream);
+                hashAlg.Clear();
+                fileStream.Close();
+            }
+            return fileHash;
         }
 
         /// <summary>
@@ -495,7 +520,7 @@ namespace TKC
         /// <exception cref="ArgumentException">User didn't selected directory.</exception>
         private string SelectDirectory()
         {
-            
+
             FolderBrowserDialog folderBrowserDialog1 = new FolderBrowserDialog();
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
