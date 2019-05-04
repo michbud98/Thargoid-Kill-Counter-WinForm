@@ -150,23 +150,18 @@ namespace TKC
                     {
                         case 10000:
                             Counter.Scout++;
-                            Counter.AllTypesKills++;
                             break;
                         case 2000000:
                             Counter.Cyclops++;
-                            Counter.AllTypesKills++;
                             break;
                         case 6000000:
                             Counter.Basillisk++;
-                            Counter.AllTypesKills++;
                             break;
                         case 10000000:
                             Counter.Medusa++;
-                            Counter.AllTypesKills++;
                             break;
                         case 15000000:
                             Counter.Hydra++;
-                            Counter.AllTypesKills++;
                             break;
                         default:
                             Counter.Unknown++;
@@ -203,30 +198,25 @@ namespace TKC
                     {
                         case 10000:
                             Counter.Scout++;
-                            Counter.AllTypesKills++;
                             //Method wont change boolean killDetected, because Scout screenshots are not interesting but it is counted
                             break;
                         case 2000000:
                             Counter.Cyclops++;
-                            Counter.AllTypesKills++;
                             killDetected = true;
                             ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}"; //format of datetime day-month-hour-minutes-seconds
                             break;
                         case 6000000:
                             Counter.Basillisk++;
-                            Counter.AllTypesKills++;
                             killDetected = true;
                             ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                         case 10000000:
                             Counter.Medusa++;
-                            Counter.AllTypesKills++;
                             killDetected = true;
                             ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
                         case 15000000:
                             Counter.Hydra++;
-                            Counter.AllTypesKills++;
                             killDetected = true;
                             ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
@@ -338,10 +328,9 @@ namespace TKC
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                         if (currentEvent != null)
                         { //reads only if corverter corverts JSON FILE
-                            if(DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && logFile.LastWriteTime >= DateTime.Now.AddMinutes(-3))
+                            if(DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && logFile.LastWriteTime >= DateTime.Now.AddMinutes(-2))
                             {
                                 ScreenShoter.MakeScreenShot(ThargoidType);
-                                Console.WriteLine("Screen created of " + ThargoidType);
                             }
                         }
                         line++;
@@ -401,7 +390,6 @@ namespace TKC
                     currentLastTimeWritten = lastLog.LastWriteTime;
                     lastLogHash = controlHash;
                     line = ReadJsonFile(lastLog.FullName, line);
-                    Console.WriteLine("File changed on line " + line);
                 }
                 //True if at the end of file and directory has a newer log file
                 else if (!controlLog.Name.Equals(lastLog.Name))
@@ -409,12 +397,10 @@ namespace TKC
                     line = 1;
                     lastLog = controlLog;
                     line = ReadJsonFile(lastLog.FullName, line);
-                    Console.WriteLine("Found new file " + lastLog.Name);
                 }
                 //else sleeps thread and restarts fileChanged cycle 2 sec later
                 else
                 {
-                    Console.WriteLine("Sleeping on line " + line);
                     Thread.Sleep(2000);
                 }
 
