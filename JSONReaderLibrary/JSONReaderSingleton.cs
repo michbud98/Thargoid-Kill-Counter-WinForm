@@ -296,8 +296,9 @@ namespace TKC
         /// </summary>
         /// <param name="filePath">Path to file</param>
         /// <param name="line">Line number from which reader starts reading</param>
+        /// <param name="firstRun">Line number from which reader starts reading</param>
         /// <returns>Line number where reader ended</returns>
-        private int ReadJsonFile(string filePath, int line)
+        private int ReadJsonFile(string filePath, int line, bool firstRun)
         {
             //debug string for current JSONStringLine
             string JSONStringLine = "";
@@ -328,7 +329,7 @@ namespace TKC
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                         if (currentEvent != null)
                         { //reads only if corverter corverts JSON FILE
-                            if(DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && logFile.LastWriteTime >= DateTime.Now.AddMinutes(-2))
+                            if (DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && firstRun == false && logFile.LastWriteTime >= DateTime.Now.AddMinutes(30))
                             {
                                 ScreenShoter.MakeScreenShot(ThargoidType);
                             }
@@ -372,7 +373,7 @@ namespace TKC
             List<FileInfo> sortedJournalsList = GetJournalsInDirectory();
             FileInfo lastLog = sortedJournalsList[sortedJournalsList.Count - 1];
             byte[] lastLogHash = GetFileHash(lastLog.FullName);
-            int line = ReadJsonFile(lastLog.FullName, 1);
+            int line = ReadJsonFile(lastLog.FullName, 1, true);
 
             //Control variables
             FileInfo controlLog;
@@ -389,14 +390,14 @@ namespace TKC
                 {
                     currentLastTimeWritten = lastLog.LastWriteTime;
                     lastLogHash = controlHash;
-                    line = ReadJsonFile(lastLog.FullName, line);
+                    line = ReadJsonFile(lastLog.FullName, line, false);
                 }
                 //True if at the end of file and directory has a newer log file
                 else if (!controlLog.Name.Equals(lastLog.Name))
                 {
                     line = 1;
                     lastLog = controlLog;
-                    line = ReadJsonFile(lastLog.FullName, line);
+                    line = ReadJsonFile(lastLog.FullName, line , false);
                 }
                 //else sleeps thread and restarts fileChanged cycle 2 sec later
                 else
