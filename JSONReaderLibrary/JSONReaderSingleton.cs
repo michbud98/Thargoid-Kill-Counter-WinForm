@@ -329,7 +329,7 @@ namespace TKC
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                         if (currentEvent != null)
                         { //reads only if corverter corverts JSON FILE
-                            if (DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && firstRun == false && logFile.LastWriteTime >= DateTime.Now.AddMinutes(30))
+                            if (DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && firstRun == false && logFile.LastWriteTime >= DateTime.Now.AddMinutes(-30))
                             {
                                 ScreenShoter.MakeScreenShot(ThargoidType);
                             }
