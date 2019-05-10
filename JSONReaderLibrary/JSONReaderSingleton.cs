@@ -308,7 +308,6 @@ namespace TKC
             {
                 fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 reader = new StreamReader(fileStream);
-                FileInfo logFile = new FileInfo(filePath);
                 EDEvent currentEvent = null;
 
                 //skips the lines that previous readers have red
@@ -328,8 +327,8 @@ namespace TKC
                         }
                         currentEvent = JsonConvert.DeserializeObject<EDEvent>(JSONStringLine, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
                         if (currentEvent != null)
-                        { //reads only if corverter corverts JSON FILE
-                            if (DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && firstRun == false && logFile.LastWriteTime >= DateTime.Now.AddMinutes(-30))
+                        { //reads only if corverter corverts JSON FILE                                                                                      
+                            if (DetectThargoidKill(currentEvent, JSONStringLine, out string ThargoidType) && ScreenShotBool == true && firstRun == false)
                             {
                                 ScreenShoter.MakeScreenShot(ThargoidType);
                             }
@@ -397,7 +396,7 @@ namespace TKC
                 {
                     line = 1;
                     lastLog = controlLog;
-                    line = ReadJsonFile(lastLog.FullName, line , false);
+                    line = ReadJsonFile(lastLog.FullName, line, false);
                 }
                 //else sleeps thread and restarts fileChanged cycle 2 sec later
                 else
