@@ -68,16 +68,17 @@
             this.KillCounter.Location = new System.Drawing.Point(11, 34);
             this.KillCounter.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.KillCounter.Name = "KillCounter";
-            this.KillCounter.Size = new System.Drawing.Size(109, 130);
+            this.KillCounter.Size = new System.Drawing.Size(109, 156);
             this.KillCounter.TabIndex = 0;
             this.KillCounter.Text = "Thargoid Combat Kills\r\n------------------------\r\nScouts: 0\r\nCyclops: 0\r\nBasillisk" +
-    ": 0\r\nMedusa: 0\r\nHydra: 0\r\nUnknown: 0\r\n------------------------\r\nTotal: 0";
+    ": 0\r\nMedusa: 0\r\nHydra: 0\r\n------------------------\r\nInterceptors: 0\r\nUnknown: 0\r" +
+    "\n------------------------\r\nTotal: 0";
             // 
             // MainUIWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(255, 182);
+            this.ClientSize = new System.Drawing.Size(255, 203);
             this.Controls.Add(this.KillCounter);
             this.Controls.Add(this.menuStrip1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;

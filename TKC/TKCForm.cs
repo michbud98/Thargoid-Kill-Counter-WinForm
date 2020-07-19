@@ -140,18 +140,20 @@ namespace TKC
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            Boolean endOfTheCycle = true;
-            while (endOfTheCycle == true)
+            while (true)
             {
                 TimeSpan ts = stopWatch.Elapsed;
-                if (reader.Counter.CheckKillChange() == true)
+                //prints kills if number of thargoid kills changed or after 10 sec
+                if (reader.Counter.CheckKillChange() == true || ts.Seconds >= 10)
                 {
                     KillCounterSetText(reader.Counter.PrintAllKills());
-
+                    stopWatch.Restart();
                 }
-                else if (reader.Counter.CheckIfKillsZero() == true && ts.Seconds == 10)
+                //after 10 sec prints kills even if they are 0
+                else if(reader.Counter.CheckIfKillsZero() && ts.Seconds >= 10)
                 {
                     KillCounterSetText(reader.Counter.PrintAllKills());
+                    stopWatch.Restart();
                 }
                 else
                 {
