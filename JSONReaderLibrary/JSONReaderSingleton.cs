@@ -151,16 +151,32 @@ namespace TKC
                         case 10000:
                             Counter.Scout++;
                             break;
+                        case 80000: //Price for scouts in journals since Oddysey
+                            Counter.Scout++;
+                            //Method wont change boolean killDetected, because Scout screenshots are not interesting but it is counted
+                            break;
                         case 2000000:
+                            Counter.Cyclops++;
+                            break;
+                        case 8000000: //Price for Cyclops in journals since Oddysey
                             Counter.Cyclops++;
                             break;
                         case 6000000:
                             Counter.Basillisk++;
                             break;
+                        case 24000000: //Price for Basillisks in journals since Oddysey
+                            Counter.Basillisk++;
+                            break;
                         case 10000000:
                             Counter.Medusa++;
                             break;
+                        case 40000000: //Price for Medusaws in journals since Oddysey
+                            Counter.Medusa++;
+                            break;
                         case 15000000:
+                            Counter.Hydra++;
+                            break;
+                        case 60000000: //Price for Hydras in journals since Oddysey
                             Counter.Hydra++;
                             break;
                         default:
