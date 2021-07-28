@@ -200,7 +200,16 @@ namespace TKC
                             Counter.Scout++;
                             //Method wont change boolean killDetected, because Scout screenshots are not interesting but it is counted
                             break;
+                        case 80000: //Price for scouts in journals since Oddysey
+                            Counter.Scout++;
+                            //Method wont change boolean killDetected, because Scout screenshots are not interesting but it is counted
+                            break;
                         case 2000000:
+                            Counter.Cyclops++;
+                            killDetected = true;
+                            ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}"; //format of datetime day-month-hour-minutes-seconds
+                            break;
+                        case 8000000: //Price for Cyclops in journals since Oddysey
                             Counter.Cyclops++;
                             killDetected = true;
                             ThargoidType = $"Cyclops{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}"; //format of datetime day-month-hour-minutes-seconds
@@ -210,12 +219,27 @@ namespace TKC
                             killDetected = true;
                             ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
+                        case 24000000: //Price for Basillisks in journals since Oddysey
+                            Counter.Basillisk++;
+                            killDetected = true;
+                            ThargoidType = $"Basillisk{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
                         case 10000000:
                             Counter.Medusa++;
                             killDetected = true;
                             ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
                             break;
+                        case 40000000: //Price for Medusaws in journals since Oddysey
+                            Counter.Medusa++;
+                            killDetected = true;
+                            ThargoidType = $"Medusa{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
                         case 15000000:
+                            Counter.Hydra++;
+                            killDetected = true;
+                            ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
+                            break;
+                        case 60000000: //Price for Hydras in journals since Oddysey
                             Counter.Hydra++;
                             killDetected = true;
                             ThargoidType = $"Hydra{DateTime.UtcNow.ToString("dd-MM-HH-mm-ss")}";
