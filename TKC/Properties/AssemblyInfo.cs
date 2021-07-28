@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Nest;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
