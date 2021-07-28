@@ -37,6 +37,6 @@ If you want application to create screenshots of thargoid kills:
   - [Licence](https://logging.apache.org/log4net/license.html)
 
 ## Licence
-- Copyright © 2019 Prorok9999
+- Copyright © 2019 Michal Budik
 - Licensed under the [MIT Licence](https://github.com/Prorok9999/Thargoid-Kill-Counter/blob/master/LICENSE)
 
